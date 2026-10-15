@@ -4,7 +4,6 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/product_artwork.dart';
 import '../../domains/_models/product.dart';
-import '../../navigator.dart';
 import 'Catalog.Ctrl.dart';
 import 'Catalog.Data.dart';
 
@@ -18,10 +17,25 @@ class CatalogView extends StatelessWidget {
     scheduleCatalogLoad();
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: SeeraColors.pinkDeep,
+        title: const Text(
+          'Katalog Produk',
+          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        actions: [
+          IconButton(
+            tooltip: 'Keranjang belanja',
+            onPressed: _controller.openCart,
+            icon: const Icon(Icons.shopping_bag_outlined),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            _CatalogHeader(onCart: _controller.openCart),
             Expanded(
               child: CustomScrollView(
                 slivers: [
@@ -110,13 +124,10 @@ class CatalogView extends StatelessWidget {
                                     mainAxisSpacing: 14,
                                     childAspectRatio: 0.69,
                                   ),
-                                  itemBuilder: (context, index) =>
-                                      _CatalogProductCard(
-                                        product: products[index],
-                                        onTap: () => _controller.openProduct(
-                                          products[index],
-                                        ),
-                                      ),
+                                  itemBuilder: (context, index) => _CatalogProductCard(
+                                    product: products[index],
+                                    onTap: () => _controller.openProduct(products[index]),
+                                  ),
                                 );
                               },
                             );
@@ -137,47 +148,7 @@ class CatalogView extends StatelessWidget {
   static void _showSortMessage(BuildContext context) {
     RM.scaffold.context = context;
     RM.scaffold.showSnackBar(
-      const SnackBar(
-        content: Text('Pilihan pengurutan segera hadir.'),
-        behavior: SnackBarBehavior.fixed,
-      ),
-    );
-  }
-}
-
-class _CatalogHeader extends StatelessWidget {
-  const _CatalogHeader({required this.onCart});
-
-  final VoidCallback onCart;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Kembali ke beranda',
-            onPressed: () => nav.to('/home'),
-            icon: const Icon(Icons.arrow_back),
-            color: SeeraColors.ink,
-          ),
-          const Expanded(
-            child: Text(
-              'Katalog Produk',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: SeeraColors.pinkPop, fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Keranjang belanja',
-            onPressed: onCart,
-            icon: const Icon(Icons.shopping_bag_outlined),
-            color: SeeraColors.ink,
-          ),
-        ],
-      ),
+      const SnackBar(content: Text('Pilihan pengurutan segera hadir.'), behavior: SnackBarBehavior.fixed),
     );
   }
 }

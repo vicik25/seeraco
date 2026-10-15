@@ -4,7 +4,6 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/product_artwork.dart';
 import '../../domains/_models/cart_item.dart';
-import '../../navigator.dart';
 import 'Cart.Ctrl.dart';
 import 'Cart.Data.dart';
 
@@ -17,12 +16,27 @@ class CartView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const _CartHeader(),
-            Expanded(
-              child: OnReactive(() {
+      appBar: AppBar(
+        backgroundColor: SeeraColors.pinkSoft,
+        foregroundColor: SeeraColors.pinkDeep,
+        title: OnReactive(
+          () => Text(
+            'Keranjang ($cartUnitCount)',
+            style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => RM.navigate.back(),
+        ),
+      ),
+      body: Center(
+        child: SizedBox(
+          width: 800,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              OnReactive(() {
                 final items = cartItems.state;
                 if (items.isEmpty) {
                   return _EmptyCart(onBrowse: _controller.openCatalog);
@@ -33,49 +47,14 @@ class CartView extends StatelessWidget {
                   onRemove: _controller.removeItem,
                 );
               }),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: OnReactive(() {
         if (cartItems.state.isEmpty) return const SizedBox.shrink();
-        return _CartCheckoutBar(onCheckout: () => _controller.continueToCheckout(context));
+        return _CartCheckoutBar(onCheckout: _controller.continueToCheckout);
       }),
-    );
-  }
-}
-
-class _CartHeader extends StatelessWidget {
-  const _CartHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Kembali ke katalog',
-            onPressed: () => nav.to('/catalog'),
-            icon: const Icon(Icons.arrow_back),
-          ),
-          Expanded(
-            child: OnReactive(
-              () => Text(
-                'Keranjang ($cartUnitCount)',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: SeeraColors.pinkPop, fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Kembali ke beranda',
-            onPressed: () => nav.to('/home'),
-            icon: const Icon(Icons.home_outlined),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -89,32 +68,18 @@ class _CartContents extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final horizontalPadding = constraints.maxWidth >= 900 ? 32.0 : 16.0;
-        return ListView(
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 24),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 920),
-                child: Column(
-                  children: [
-                    for (var i = 0; i < items.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 12),
-                      _CartItemCard(item: items[i], onChangeQuantity: onChangeQuantity, onRemove: onRemove),
-                    ],
-                    const SizedBox(height: 20),
-                    const _OrderSummary(),
-                    const SizedBox(height: 20),
-                    const _PreOrderReminder(),
-                  ],
-                ),
-              ),
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            _CartItemCard(item: items[i], onChangeQuantity: onChangeQuantity, onRemove: onRemove),
           ],
-        );
-      },
+          const SizedBox(height: 20),
+          const _PreOrderReminder(),
+        ],
+      ),
     );
   }
 }
@@ -128,16 +93,19 @@ class _CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: SeeraColors.pinkSoft),
+    return Card(
+      margin: EdgeInsets.zero,
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: SeeraColors.pinkSoft),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           SizedBox(
             width: 88,
             height: 104,
@@ -179,7 +147,8 @@ class _CartItemCard extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             color: SeeraColors.pinkDeep,
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -229,44 +198,6 @@ class _ItemQuantity extends StatelessWidget {
   }
 }
 
-class _OrderSummary extends StatelessWidget {
-  const _OrderSummary();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: OnReactive(
-        () => Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Subtotal',
-                style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w700),
-              ),
-            ),
-            Text(
-              _formatPrice(cartSubtotal),
-              style: const TextStyle(
-                color: SeeraColors.pinkDeep,
-                fontWeight: FontWeight.w900,
-                fontFamily: 'monospace',
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PreOrderReminder extends StatelessWidget {
   const _PreOrderReminder();
 
@@ -293,6 +224,60 @@ class _PreOrderReminder extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CartSampleCards extends StatelessWidget {
+  const _CartSampleCards();
+
+  static const _samples = [
+    ('Pastel Daisy Bracelet', 'Rp50.000'),
+    ('Cherry Blossom Necklace', 'Rp65.000'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Contoh item Seera',
+          style: TextStyle(color: SeeraColors.ink, fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _samples.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final sample = _samples[index];
+            return Card(
+              margin: EdgeInsets.zero,
+              color: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: SeeraColors.pinkSoft),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: SeeraColors.pinkSoft,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.auto_awesome, color: SeeraColors.pinkDeep),
+                ),
+                title: Text(sample.$1, style: const TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text(sample.$2, style: const TextStyle(color: SeeraColors.pinkDeep)),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -399,6 +384,8 @@ class _EmptyCart extends StatelessWidget {
               ),
               child: const Text('Lihat Produk'),
             ),
+            const SizedBox(height: 20),
+            const _CartSampleCards(),
           ],
         ),
       ),

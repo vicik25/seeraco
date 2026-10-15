@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:seeraco/navigator.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
@@ -48,7 +49,11 @@ class HomeView extends StatelessWidget {
                           const SizedBox(height: 16),
                           FilledButton(onPressed: _controller.openCatalog, child: const Text('Lihat Semua Produk')),
                           const SizedBox(height: 28),
-                          const _ShortcutRow(),
+                          _ShortcutRow(
+                            onAbout: _controller.openAbout,
+                            onBuyers: _controller.openBuyers,
+                            onCart: _controller.openCart,
+                          ),
                           const SizedBox(height: 28),
                           const _PreOrderNote(),
                           const SizedBox(height: 32),
@@ -58,14 +63,37 @@ class HomeView extends StatelessWidget {
                     const _TestimonialSection(),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      child: const Column(
+                      child: Column(
                         children: [
-                          SizedBox(height: 32),
-                          _SectionTitle(title: 'PEMBELI SEERA'),
-                          SizedBox(height: 16),
-                          _RecentBuyers(),
-                          SizedBox(height: 32),
-                          _HomeFooter(),
+                          const SizedBox(height: 32),
+                          const _SectionTitle(title: 'PEMBELI SEERA'),
+                          const SizedBox(height: 16),
+                          const _RecentBuyers(),
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: _controller.openBuyers,
+                                icon: const Icon(Icons.people_outline),
+                                label: const Text('Lihat Semua Pembeli'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _controller.openAbout,
+                                icon: const Icon(Icons.info_outline),
+                                label: const Text('Tentang Seera'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _controller.openOrderTrack,
+                                icon: const Icon(Icons.local_shipping_outlined),
+                                label: const Text('Cek Pesanan'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 32),
+                          const _HomeFooter(),
                         ],
                       ),
                     ),
@@ -480,14 +508,18 @@ class _BeadProductArt extends StatelessWidget {
 }
 
 class _ShortcutRow extends StatelessWidget {
-  const _ShortcutRow();
+  const _ShortcutRow({required this.onAbout, required this.onBuyers, required this.onCart});
+
+  final VoidCallback onAbout;
+  final VoidCallback onBuyers;
+  final VoidCallback onCart;
 
   @override
   Widget build(BuildContext context) {
     final shortcuts = [
-      (Icons.chat_bubble_outline, 'WhatsApp', const Color(0xFF219653)),
-      (Icons.camera_alt_outlined, 'Instagram', SeeraColors.lilac),
-      (Icons.shopping_bag_outlined, 'Keranjang', const Color(0xFFF2994A)),
+      (Icons.info_outline, 'Tentang Seera', onAbout),
+      (Icons.people_outline, 'Pembeli Seera', onBuyers),
+      (Icons.shopping_bag_outlined, 'Keranjang', onCart),
     ];
     return Row(
       children: [
@@ -498,21 +530,13 @@ class _ShortcutRow extends StatelessWidget {
               button: true,
               label: shortcuts[i].$2,
               child: InkWell(
-                onTap: () {
-                  RM.scaffold.context = context;
-                  RM.scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text('${shortcuts[i].$2} akan tersedia segera.'),
-                      behavior: SnackBarBehavior.fixed,
-                    ),
-                  );
-                },
+                onTap: shortcuts[i].$3,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Column(
                     children: [
-                      Icon(shortcuts[i].$1, color: shortcuts[i].$3, size: 30),
+                      Icon(shortcuts[i].$1, color: SeeraColors.pinkDeep, size: 30),
                       const SizedBox(height: 6),
                       Text(shortcuts[i].$2, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12)),
                     ],

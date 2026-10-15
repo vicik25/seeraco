@@ -17,63 +17,15 @@ class ProductDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _DetailHeader(),
-            Expanded(
-              child: OnReactive(
-                () {
-                  final product = selectedProduct.state;
-                  if (product == null) return const _MissingProduct();
-                  return _ProductDetails(product: product);
-                },
-              ),
-            ),
-          ],
+      appBar: AppBar(
+        backgroundColor: SeeraColors.pinkSoft,
+        foregroundColor: SeeraColors.pinkDeep,
+        title: const Text(
+          'Detail Produk',
+          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
         ),
-      ),
-      bottomNavigationBar: OnReactive(
-        () {
-          final product = selectedProduct.state;
-          if (product == null) return const SizedBox.shrink();
-          return _DetailActions(
-            product: product,
-            onAdd: () => _controller.addToCart(context),
-            onBuy: () => _controller.buyNow(context),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _DetailHeader extends StatelessWidget {
-  const _DetailHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Kembali ke katalog',
-            onPressed: () => nav.to('/catalog'),
-            icon: const Icon(Icons.arrow_back),
-          ),
-          const Expanded(
-            child: Text(
-              'Detail Produk',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: SeeraColors.pinkPop,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        actions: [
           IconButton(
             tooltip: 'Keranjang belanja',
             onPressed: () => nav.to('/cart'),
@@ -81,6 +33,30 @@ class _DetailHeader extends StatelessWidget {
           ),
         ],
       ),
+      body: Center(
+        child: SizedBox(
+          width: 800,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              OnReactive(() {
+                final product = selectedProduct.state;
+                if (product == null) return const _MissingProduct();
+                return _ProductDetails(product: product);
+              }),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: OnReactive(() {
+        final product = selectedProduct.state;
+        if (product == null) return const SizedBox.shrink();
+        return _DetailActions(
+          product: product,
+          onAdd: () => _controller.addToCart(context),
+          onBuy: () => _controller.buyNow(context),
+        );
+      }),
     );
   }
 }
@@ -99,7 +75,7 @@ class _ProductDetails extends StatelessWidget {
         final details = _ProductInformation(product: product);
 
         if (wide) {
-          return SingleChildScrollView(
+          return Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
               child: ConstrainedBox(
@@ -117,15 +93,11 @@ class _ProductDetails extends StatelessWidget {
           );
         }
 
-        return SingleChildScrollView(
+        return Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              image,
-              const SizedBox(height: 24),
-              details,
-            ],
+            children: [image, const SizedBox(height: 24), details],
           ),
         );
       },
@@ -145,7 +117,7 @@ class _ProductGallery extends StatelessWidget {
         Container(
           height: 340,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: SeeraColors.pinkSoft,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: SeeraColors.pinkSoft, width: 2),
           ),
@@ -194,29 +166,21 @@ class _ProductInformation extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         DecoratedBox(
-          decoration: BoxDecoration(
-            color: SeeraColors.pinkSoft,
-            borderRadius: BorderRadius.circular(20),
-          ),
+          decoration: BoxDecoration(color: SeeraColors.pinkSoft, borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Text(
               product.category.toUpperCase(),
-              style: const TextStyle(
-                color: SeeraColors.pinkDeep,
-                fontWeight: FontWeight.w800,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800, fontSize: 11),
             ),
           ),
         ),
         const SizedBox(height: 10),
         Text(
           product.name,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: SeeraColors.ink,
-            fontWeight: FontWeight.w900,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(color: SeeraColors.ink, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
         Row(
@@ -244,22 +208,14 @@ class _ProductInformation extends StatelessWidget {
         const SizedBox(height: 24),
         const Text(
           'PILIH WARNA',
-          style: TextStyle(
-            color: SeeraColors.ink,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.7,
-          ),
+          style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900, letterSpacing: 0.7),
         ),
         const SizedBox(height: 10),
         const _VariantPicker(),
         const SizedBox(height: 24),
         const Text(
           'JUMLAH',
-          style: TextStyle(
-            color: SeeraColors.ink,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.7,
-          ),
+          style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900, letterSpacing: 0.7),
         ),
         const SizedBox(height: 10),
         const _QuantitySelector(),
@@ -299,14 +255,9 @@ class _VariantPicker extends StatelessWidget {
               selectedColor: SeeraColors.pinkSoft,
               backgroundColor: Colors.white,
               avatar: CircleAvatar(backgroundColor: colors[variant]),
-              labelStyle: const TextStyle(
-                color: SeeraColors.ink,
-                fontWeight: FontWeight.w600,
-              ),
+              labelStyle: const TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w600),
               side: BorderSide(
-                color: selectedProductVariant.state == variant
-                    ? SeeraColors.pinkPop
-                    : SeeraColors.pinkSoft,
+                color: selectedProductVariant.state == variant ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
               ),
             ),
         ],
@@ -334,9 +285,7 @@ class _QuantitySelector extends StatelessWidget {
           children: [
             IconButton(
               tooltip: 'Kurangi jumlah',
-              onPressed: selectedProductQuantity.state > 1
-                  ? controller.decreaseQuantity
-                  : null,
+              onPressed: selectedProductQuantity.state > 1 ? controller.decreaseQuantity : null,
               icon: const Icon(Icons.remove),
             ),
             SizedBox(
@@ -349,9 +298,7 @@ class _QuantitySelector extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Tambah jumlah',
-              onPressed: selectedProductQuantity.state < 99
-                  ? controller.increaseQuantity
-                  : null,
+              onPressed: selectedProductQuantity.state < 99 ? controller.increaseQuantity : null,
               icon: const Icon(Icons.add),
             ),
           ],
@@ -392,11 +339,7 @@ class _PreOrderNote extends StatelessWidget {
 }
 
 class _DetailActions extends StatelessWidget {
-  const _DetailActions({
-    required this.product,
-    required this.onAdd,
-    required this.onBuy,
-  });
+  const _DetailActions({required this.product, required this.onAdd, required this.onBuy});
 
   final Product product;
   final VoidCallback onAdd;
@@ -460,18 +403,11 @@ class _MissingProduct extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.inventory_2_outlined,
-              size: 48,
-              color: SeeraColors.greyMauve,
-            ),
+            const Icon(Icons.inventory_2_outlined, size: 48, color: SeeraColors.greyMauve),
             const SizedBox(height: 12),
             const Text('Pilih produk dari katalog untuk melihat detailnya.'),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => nav.to('/catalog'),
-              child: const Text('Lihat Katalog'),
-            ),
+            FilledButton(onPressed: () => nav.to('/catalog'), child: const Text('Lihat Katalog')),
           ],
         ),
       ),
@@ -481,9 +417,6 @@ class _MissingProduct extends StatelessWidget {
 
 String _formatPrice(int price) {
   final digits = price.toString();
-  final formatted = digits.replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]}.',
-  );
+  final formatted = digits.replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.');
   return 'Rp$formatted';
 }

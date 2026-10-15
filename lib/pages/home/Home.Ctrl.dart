@@ -11,6 +11,12 @@ class HomeCtrl {
 
   void openCart() => nav.to('/cart');
 
+  void openBuyers() => nav.to('/buyers');
+
+  void openAbout() => nav.to('/about');
+
+  void openOrderTrack() => nav.to('/order-track');
+
   void openProduct(Product product) {
     const ProductDetailCtrl().selectProduct(product);
     nav.to('/product-detail');

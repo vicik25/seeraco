@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:states_rebuilder/states_rebuilder.dart';
-
 import '../../domains/_models/cart_item.dart';
 import '../../navigator.dart';
 import 'Cart.Data.dart';
@@ -30,10 +27,7 @@ class CartCtrl {
 
   void openCatalog() => nav.to('/catalog');
 
-  void continueToCheckout(BuildContext context) {
-    RM.scaffold.context = context;
-    RM.scaffold.showSnackBar(
-      const SnackBar(content: Text('Checkout akan segera hadir.'), behavior: SnackBarBehavior.fixed),
-    );
+  void continueToCheckout() {
+    nav.to('/checkout');
   }
 }
