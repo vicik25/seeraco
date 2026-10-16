@@ -18,10 +18,16 @@ class BuyersView extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: SeeraColors.pinkDeep,
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => RM.navigate.back(),
+        ),
         title: const Text(
           'Pembeli Seera',
-          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: SeeraColors.pinkDeep,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         actions: [
           OnFormSubmissionBuilder(
@@ -32,7 +38,10 @@ class BuyersView extends StatelessWidget {
                 child: SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: SeeraColors.pinkDeep),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: SeeraColors.pinkDeep,
+                  ),
                 ),
               ),
             ),
@@ -56,7 +65,19 @@ class BuyersView extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1100),
                     child: OnReactive(() {
-                      final profiles = seeraBuyers.state.take(visibleBuyerCount.state).toList();
+                      final profiles = seeraBuyers.state
+                          .take(visibleBuyerCount.state)
+                          .toList();
+                      if (profiles.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 36),
+                          child: Text(
+                            'Data pembeli belum tersedia.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: SeeraColors.greyMauve),
+                          ),
+                        );
+                      }
                       return LayoutBuilder(
                         builder: (context, constraints) {
                           final columns = constraints.maxWidth >= 850
@@ -68,13 +89,15 @@ class BuyersView extends StatelessWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: profiles.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columns,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                              mainAxisExtent: 186,
-                            ),
-                            itemBuilder: (context, index) => _BuyerCard(profile: profiles[index]),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: 14,
+                                  mainAxisSpacing: 14,
+                                  mainAxisExtent: 186,
+                                ),
+                            itemBuilder: (context, index) =>
+                                _BuyerCard(profile: profiles[index]),
                           );
                         },
                       );
@@ -88,6 +111,9 @@ class BuyersView extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1100),
                     child: OnReactive(() {
+                      if (seeraBuyers.state.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
                       if (visibleBuyerCount.state >= seeraBuyers.state.length) {
                         return const Center(
                           child: Text(
@@ -100,8 +126,11 @@ class BuyersView extends StatelessWidget {
                       return Center(
                         child: OnFormSubmissionBuilder(
                           listenTo: loadMoreBuyersForm,
-                          onSubmitting: () => const _LoadMoreButton(isLoading: true),
-                          child: _LoadMoreButton(onPressed: _controller.loadMore),
+                          onSubmitting: () =>
+                              const _LoadMoreButton(isLoading: true),
+                          child: _LoadMoreButton(
+                            onPressed: _controller.loadMore,
+                          ),
                         ),
                       );
                     }),
@@ -130,31 +159,31 @@ class _BuyersBanner extends StatelessWidget {
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 560;
               final content = Column(
-                crossAxisAlignment: compact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                crossAxisAlignment: compact
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Pembeli Seera',
                     textAlign: compact ? TextAlign.center : TextAlign.start,
-                    style: const TextStyle(color: SeeraColors.ink, fontSize: 30, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      color: SeeraColors.ink,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     'Terima kasih sudah jadi bagian dari Seera!',
                     textAlign: compact ? TextAlign.center : TextAlign.start,
-                    style: const TextStyle(color: SeeraColors.ink, fontSize: 15),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    '$seeraTotalBuyers',
                     style: const TextStyle(
                       color: SeeraColors.ink,
-                      fontFamily: 'monospace',
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
                     ),
                   ),
+                  const SizedBox(height: 14),
                   const Text(
-                    'pembeli sudah menemukan aksesori favoritnya',
+                    'Cerita pembeli akan ditampilkan setelah data tersedia.',
                     style: TextStyle(color: SeeraColors.ink, fontSize: 12),
                   ),
                 ],
@@ -191,7 +220,9 @@ class _BuyerCard extends StatelessWidget {
             backgroundColor: profile.avatarColor,
             child: Icon(
               profile.isAnonymous ? Icons.person_outline : Icons.face_3_rounded,
-              color: profile.isAnonymous ? SeeraColors.greyMauve : SeeraColors.ink,
+              color: profile.isAnonymous
+                  ? SeeraColors.greyMauve
+                  : SeeraColors.ink,
               size: 28,
             ),
           ),
@@ -204,24 +235,47 @@ class _BuyerCard extends StatelessWidget {
                   profile.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: SeeraColors.ink, fontSize: 16, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    color: SeeraColors.ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 7),
                 Text(
                   profile.productName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: SeeraColors.pinkDeep,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const Spacer(),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 16, color: SeeraColors.greyMauve),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: SeeraColors.greyMauve,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text(profile.city, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12)),
+                      child: Text(
+                        profile.city,
+                        style: const TextStyle(
+                          color: SeeraColors.greyMauve,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    Text(profile.date, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 11)),
+                    Text(
+                      profile.date,
+                      style: const TextStyle(
+                        color: SeeraColors.greyMauve,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -247,7 +301,10 @@ class _LoadMoreButton extends StatelessWidget {
           ? const SizedBox(
               width: 17,
               height: 17,
-              child: CircularProgressIndicator(strokeWidth: 2, color: SeeraColors.pinkDeep),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: SeeraColors.pinkDeep,
+              ),
             )
           : const Icon(Icons.expand_more),
       label: Text(isLoading ? 'Memuat pembeli' : 'Muat lebih banyak'),

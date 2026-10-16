@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../navigator.dart';
+import '../../data/seera_api.dart';
 import '../order_track/OrderTrack.Data.dart';
+import '../catalog/Catalog.Data.dart';
 import 'Review.Data.dart';
 
 class ReviewCtrl {
@@ -25,6 +27,18 @@ class ReviewCtrl {
   }
 
   void submit(BuildContext context) {
+    if (!orderTrackCompleted.state) {
+      RM.scaffold.context = context;
+      RM.scaffold.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ulasan hanya bisa dikirim untuk pesanan yang sudah selesai.',
+          ),
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
     if (reviewRatings.state.any((rating) => rating == 0)) {
       RM.scaffold.context = context;
       RM.scaffold.showSnackBar(
@@ -35,11 +49,11 @@ class ReviewCtrl {
       );
       return;
     }
-    if (reviewText.state.trim().isEmpty) {
+    if (reviewText.state.trim().length < 10) {
       RM.scaffold.context = context;
       RM.scaffold.showSnackBar(
         const SnackBar(
-          content: Text('Tulis sedikit cerita tentang pesananmu.'),
+          content: Text('Ulasan minimal 10 karakter ya.'),
           behavior: SnackBarBehavior.fixed,
         ),
       );
@@ -47,23 +61,37 @@ class ReviewCtrl {
     }
 
     reviewForm.submit(() async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      orderTrackCode.state = reviewOrderCode;
-      orderTrackWhatsapp.state = trackedOrderWhatsapp;
-      orderTrackExpectedWhatsapp.state = trackedOrderWhatsapp;
-      orderTrackCompleted.state = true;
-      orderTrackHasMatch.state = true;
-      orderTrackHasSearched.state = true;
-      RM.scaffold.context = context;
-      RM.scaffold.showSnackBar(
-        const SnackBar(
-          content: Text('Terima kasih! Ulasanmu sudah berhasil dikirim.'),
-          behavior: SnackBarBehavior.fixed,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      nav.to('/order-track');
+      try {
+        for (var index = 0; index < reviewProducts.state.length; index++) {
+          await SeeraApi.postForm('simpan_review.php', {
+            'kode_pesanan': orderTrackCode.state,
+            'nama_produk': reviewProducts.state[index],
+            'rating': reviewRatings.state[index].toString(),
+            'ulasan': reviewText.state.trim(),
+          });
+        }
+        await loadStoreData(refresh: true);
+        if (!context.mounted) return;
+        RM.scaffold.context = context;
+        RM.scaffold.showSnackBar(
+          const SnackBar(
+            content: Text('Terima kasih! Ulasanmu sudah berhasil dikirim.'),
+            behavior: SnackBarBehavior.fixed,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        nav.to('/order-track');
+      } catch (error) {
+        if (!context.mounted) return;
+        RM.scaffold.context = context;
+        RM.scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Ulasan gagal dikirim: $error'),
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
+      }
     });
   }
 

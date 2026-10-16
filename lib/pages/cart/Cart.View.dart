@@ -14,6 +14,7 @@ class CartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
       appBar: AppBar(
@@ -25,14 +26,11 @@ class CartView extends StatelessWidget {
             style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
       ),
       body: Center(
         child: SizedBox(
-          width: 800,
+          width: screenWidth < 800 ? screenWidth : 800,
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
@@ -103,20 +101,18 @@ class _CartItemCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-          SizedBox(
-            width: 88,
-            height: 104,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ProductArtwork(product: item.product),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 380;
+            final artwork = SizedBox(
+              width: compact ? 64 : 88,
+              height: compact ? 72 : 104,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: ProductArtwork(product: item.product),
+              ),
+            );
+            final productInfo = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -136,18 +132,61 @@ class _CartItemCard extends StatelessWidget {
                     fontFamily: 'monospace',
                   ),
                 ),
-                const SizedBox(height: 4),
-                _ItemQuantity(item: item, onChangeQuantity: onChangeQuantity),
               ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Hapus ${item.product.name}',
-            onPressed: () => onRemove(item),
-            icon: const Icon(Icons.delete_outline),
-            color: SeeraColors.pinkDeep,
-          ),
-          ],
+            );
+            final removeButton = IconButton(
+              tooltip: 'Hapus ${item.product.name}',
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              padding: EdgeInsets.zero,
+              onPressed: () => onRemove(item),
+              icon: const Icon(Icons.delete_outline),
+              color: SeeraColors.pinkDeep,
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      artwork,
+                      const SizedBox(width: 8),
+                      Expanded(child: productInfo),
+                      removeButton,
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Text('Jumlah', style: TextStyle(color: SeeraColors.greyMauve, fontSize: 12)),
+                      const SizedBox(width: 8),
+                      _ItemQuantity(item: item, onChangeQuantity: onChangeQuantity),
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                artwork,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      productInfo,
+                      const SizedBox(height: 4),
+                      _ItemQuantity(item: item, onChangeQuantity: onChangeQuantity),
+                    ],
+                  ),
+                ),
+                removeButton,
+              ],
+            );
+          },
         ),
       ),
     );
@@ -173,8 +212,10 @@ class _ItemQuantity extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            tooltip: 'Kurangi jumlah ${item.product.name}',
+            tooltip: 'Kurangi',
             visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: EdgeInsets.zero,
             onPressed: item.quantity > 1 ? () => onChangeQuantity(item, -1) : null,
             icon: const Icon(Icons.remove, size: 16),
           ),
@@ -187,8 +228,10 @@ class _ItemQuantity extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Tambah jumlah ${item.product.name}',
+            tooltip: 'Tambah',
             visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: EdgeInsets.zero,
             onPressed: item.quantity < 99 ? () => onChangeQuantity(item, 1) : null,
             icon: const Icon(Icons.add, size: 16),
           ),
@@ -218,66 +261,12 @@ class _PreOrderReminder extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Semua produk dibuat pre-order. Estimasi tiba 3 sampai 5 hari.',
+              'Ongkir dihitung di langkah berikutnya. Semua produk dibuat pre-order dengan estimasi tiba 3 sampai 5 hari.',
               style: TextStyle(color: SeeraColors.ink, height: 1.4),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _CartSampleCards extends StatelessWidget {
-  const _CartSampleCards();
-
-  static const _samples = [
-    ('Pastel Daisy Bracelet', 'Rp50.000'),
-    ('Cherry Blossom Necklace', 'Rp65.000'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'Contoh item Seera',
-          style: TextStyle(color: SeeraColors.ink, fontSize: 17, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 10),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _samples.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final sample = _samples[index];
-            return Card(
-              margin: EdgeInsets.zero,
-              color: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: SeeraColors.pinkSoft),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: SeeraColors.pinkSoft,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.auto_awesome, color: SeeraColors.pinkDeep),
-                ),
-                title: Text(sample.$1, style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text(sample.$2, style: const TextStyle(color: SeeraColors.pinkDeep)),
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 }
@@ -296,43 +285,52 @@ class _CartCheckoutBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 920),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OnReactive(
-                      () => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Total sementara', style: TextStyle(color: SeeraColors.greyMauve, fontSize: 12)),
-                          Text(
-                            _formatPrice(cartSubtotal),
-                            style: const TextStyle(
-                              color: SeeraColors.ink,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: 'monospace',
+          child: SizedBox(
+            height: 48,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OnReactive(
+                        () => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Total sementara',
+                              style: TextStyle(color: SeeraColors.greyMauve, fontSize: 11, height: 1),
                             ),
-                          ),
-                        ],
+                            Text(
+                              _formatPrice(cartSubtotal),
+                              style: const TextStyle(
+                                color: SeeraColors.ink,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'monospace',
+                                fontSize: 14,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: onCheckout,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: SeeraColors.pinkDeep,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onCheckout,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: SeeraColors.pinkDeep,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 48),
+                        ),
+                        child: const Text('Lanjut ke Checkout'),
                       ),
-                      child: const Text('Lanjut ke Checkout'),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -384,8 +382,6 @@ class _EmptyCart extends StatelessWidget {
               ),
               child: const Text('Lihat Produk'),
             ),
-            const SizedBox(height: 20),
-            const _CartSampleCards(),
           ],
         ),
       ),

@@ -1,79 +1,24 @@
 import 'package:states_rebuilder/states_rebuilder.dart';
 
-import '../../core/theme/seera_colors.dart';
+import '../../data/seera_api.dart';
 import '../../domains/_models/product.dart';
-
-const catalogCategories = [
-  'Semua',
-  'Jam Beads',
-  'Gelang',
-  'Custom',
-  'Bundling',
-];
+import '../../domains/_models/product_review.dart';
+import '../../domains/_models/testimonial.dart';
 
 final catalogProducts = RM.inject<List<Product>>(
-  () => const [
-    Product(
-      id: 'butterfly-watch',
-      name: 'Butterfly Beads Watch',
-      price: 45000,
-      category: 'Jam Beads',
-      colors: [SeeraColors.lilac, SeeraColors.pinkPop, SeeraColors.lemon],
-      description: 'Jam tangan manik warna-warni dengan detail kupu-kupu.',
-      rating: 4.9,
-      reviewCount: 28,
-    ),
-    Product(
-      id: 'daisy-bracelet',
-      name: 'Pastel Daisy Bracelet',
-      price: 28000,
-      category: 'Gelang',
-      colors: [SeeraColors.lemon, SeeraColors.pinkSoft, SeeraColors.babyBlueStar],
-      description: 'Gelang bunga mungil untuk menemani hari cerahmu.',
-      rating: 5,
-      reviewCount: 19,
-    ),
-    Product(
-      id: 'sweetheart-strap',
-      name: 'Sweetheart Beads Strap',
-      price: 35000,
-      category: 'Custom',
-      colors: [SeeraColors.pinkPop, SeeraColors.creamPaper, SeeraColors.lilac],
-      description: 'Tali aksesori manik dengan aksen hati yang manis.',
-      rating: 4.8,
-      reviewCount: 16,
-    ),
-    Product(
-      id: 'candy-watch',
-      name: 'Candy Cloud Watch',
-      price: 42000,
-      category: 'Jam Beads',
-      colors: [SeeraColors.babyBlueStar, SeeraColors.lilac, SeeraColors.pinkSoft],
-      description: 'Jam tangan beads bernuansa pastel seperti permen.',
-      rating: 4.9,
-      reviewCount: 24,
-    ),
-    Product(
-      id: 'bestie-set',
-      name: 'Bestie Beads Set',
-      price: 52000,
-      category: 'Bundling',
-      colors: [SeeraColors.pinkPop, SeeraColors.lemon, SeeraColors.skyPastel],
-      description: 'Sepasang gelang manik untuk dipakai bareng bestie.',
-      rating: 5,
-      reviewCount: 11,
-    ),
-    Product(
-      id: 'flower-bracelet',
-      name: 'Tiny Flower Bracelet',
-      price: 25000,
-      category: 'Gelang',
-      colors: [SeeraColors.lilac, SeeraColors.creamPaper, SeeraColors.pinkLocker],
-      description: 'Gelang bunga sederhana dengan warna pilihanmu.',
-      rating: 4.7,
-      reviewCount: 9,
-    ),
-  ],
+  () => const [],
+  autoDisposeWhenNotUsed: false,
+);
+final favoriteProducts = RM.inject<List<Product>>(
+  () => const [],
+  autoDisposeWhenNotUsed: false,
+);
+final recentTestimonials = RM.inject<List<Testimonial>>(
+  () => const [],
+  autoDisposeWhenNotUsed: false,
+);
+final productReviews = RM.inject<List<ProductReview>>(
+  () => const [],
   autoDisposeWhenNotUsed: false,
 );
 
@@ -85,14 +30,92 @@ final isCatalogLoading = RM.inject<bool>(
   () => true,
   autoDisposeWhenNotUsed: false,
 );
-var _catalogLoadScheduled = false;
+final catalogLoadError = RM.inject<String?>(
+  () => null,
+  autoDisposeWhenNotUsed: false,
+);
+final isReviewsLoading = RM.inject<bool>(
+  () => true,
+  autoDisposeWhenNotUsed: false,
+);
+final reviewsLoadError = RM.inject<String?>(
+  () => null,
+  autoDisposeWhenNotUsed: false,
+);
 
-void scheduleCatalogLoad() {
-  if (_catalogLoadScheduled) return;
-  _catalogLoadScheduled = true;
-  Future<void>.delayed(const Duration(milliseconds: 450)).then((_) {
-    isCatalogLoading.state = false;
-  });
+Future<void>? _storeLoad;
+
+Future<void> loadStoreData({bool refresh = false}) {
+  if (_storeLoad != null && !refresh) return _storeLoad!;
+  _storeLoad = _loadStoreData();
+  return _storeLoad!;
+}
+
+Future<void> _loadStoreData() async {
+  isCatalogLoading.state = true;
+  isReviewsLoading.state = true;
+  catalogLoadError.state = null;
+  reviewsLoadError.state = null;
+  await Future.wait([_loadProducts(), _loadReviews()]);
+  isCatalogLoading.state = false;
+  isReviewsLoading.state = false;
+}
+
+Future<void> _loadProducts() async {
+  try {
+    final rows = await SeeraApi.getList('get_produk.php');
+    final products = rows
+        .map(Product.fromJson)
+        .where((product) => product.name.isNotEmpty)
+        .toList(growable: false);
+    catalogProducts.state = products;
+    favoriteProducts.state = products.take(3).toList(growable: false);
+    if (!catalogCategories.contains(selectedCatalogCategory.state)) {
+      selectedCatalogCategory.state = 'Semua';
+    }
+  } catch (error) {
+    catalogLoadError.state = error.toString();
+  }
+}
+
+Future<void> _loadReviews() async {
+  try {
+    final rows = await SeeraApi.getList('get_review.php');
+    final reviews = rows
+        .map(ProductReview.fromJson)
+        .where((review) => review.comment.isNotEmpty)
+        .toList(growable: false);
+    productReviews.state = reviews;
+    recentTestimonials.state = reviews
+        .take(6)
+        .map(
+          (review) => Testimonial(
+            quote: review.comment,
+            displayName: review.customerName.isEmpty
+                ? 'Pelanggan Seera'
+                : review.customerName,
+            initials: review.customerName.isEmpty
+                ? 'S'
+                : review.customerName.substring(0, 1).toUpperCase(),
+            rating: review.rating,
+            productName: review.productName,
+          ),
+        )
+        .toList(growable: false);
+  } catch (error) {
+    reviewsLoadError.state = error.toString();
+  }
+}
+
+List<String> get catalogCategories {
+  final categories =
+      catalogProducts.state
+          .map((product) => product.category)
+          .where((category) => category.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+  return ['Semua', ...categories];
 }
 
 List<Product> get filteredCatalogProducts {
@@ -100,5 +123,5 @@ List<Product> get filteredCatalogProducts {
   if (category == 'Semua') return catalogProducts.state;
   return catalogProducts.state
       .where((product) => product.category == category)
-      .toList();
+      .toList(growable: false);
 }

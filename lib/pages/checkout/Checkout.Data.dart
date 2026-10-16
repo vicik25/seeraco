@@ -6,6 +6,7 @@ final checkoutName = RM.inject<String>(() => '', autoDisposeWhenNotUsed: false);
 final checkoutWhatsapp = RM.inject<String>(() => '', autoDisposeWhenNotUsed: false);
 final checkoutEmail = RM.inject<String>(() => '', autoDisposeWhenNotUsed: false);
 final checkoutAddress = RM.inject<String>(() => '', autoDisposeWhenNotUsed: false);
+final checkoutNote = RM.inject<String>(() => '', autoDisposeWhenNotUsed: false);
 final checkoutNameError = RM.inject<String?>(() => null, autoDisposeWhenNotUsed: false);
 final checkoutWhatsappError = RM.inject<String?>(() => null, autoDisposeWhenNotUsed: false);
 final checkoutEmailError = RM.inject<String?>(() => null, autoDisposeWhenNotUsed: false);

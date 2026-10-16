@@ -14,7 +14,7 @@ class CatalogView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    scheduleCatalogLoad();
+    loadStoreData();
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
       appBar: AppBar(
@@ -22,9 +22,15 @@ class CatalogView extends StatelessWidget {
         foregroundColor: SeeraColors.pinkDeep,
         title: const Text(
           'Katalog Produk',
-          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: SeeraColors.pinkDeep,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => RM.navigate.back(),
+        ),
         actions: [
           IconButton(
             tooltip: 'Keranjang belanja',
@@ -54,11 +60,12 @@ class CatalogView extends StatelessWidget {
                               const SizedBox(height: 26),
                               Text(
                                 'PILIH GAYA FAVORITMU',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: SeeraColors.ink,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.8,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: SeeraColors.ink,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.8,
+                                    ),
                               ),
                               const SizedBox(height: 12),
                               const _CategoryFilters(),
@@ -79,7 +86,10 @@ class CatalogView extends StatelessWidget {
                               const Expanded(
                                 child: Text(
                                   'Produk pilihan untuk harimu',
-                                  style: TextStyle(color: SeeraColors.greyMauve, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    color: SeeraColors.greyMauve,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                               TextButton.icon(
@@ -103,6 +113,12 @@ class CatalogView extends StatelessWidget {
                             if (isCatalogLoading.state) {
                               return const _CatalogSkeleton();
                             }
+                            if (catalogLoadError.state != null) {
+                              return _CatalogLoadError(
+                                message: catalogLoadError.state!,
+                                onRetry: () => loadStoreData(refresh: true),
+                              );
+                            }
                             final products = filteredCatalogProducts;
                             if (products.isEmpty) {
                               return const _CatalogEmpty();
@@ -118,16 +134,20 @@ class CatalogView extends StatelessWidget {
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: products.length,
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: columns,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 14,
-                                    childAspectRatio: 0.69,
-                                  ),
-                                  itemBuilder: (context, index) => _CatalogProductCard(
-                                    product: products[index],
-                                    onTap: () => _controller.openProduct(products[index]),
-                                  ),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: columns,
+                                        crossAxisSpacing: 12,
+                                        mainAxisSpacing: 14,
+                                        childAspectRatio: 0.69,
+                                      ),
+                                  itemBuilder: (context, index) =>
+                                      _CatalogProductCard(
+                                        product: products[index],
+                                        onTap: () => _controller.openProduct(
+                                          products[index],
+                                        ),
+                                      ),
                                 );
                               },
                             );
@@ -148,7 +168,10 @@ class CatalogView extends StatelessWidget {
   static void _showSortMessage(BuildContext context) {
     RM.scaffold.context = context;
     RM.scaffold.showSnackBar(
-      const SnackBar(content: Text('Pilihan pengurutan segera hadir.'), behavior: SnackBarBehavior.fixed),
+      const SnackBar(
+        content: Text('Pilihan pengurutan segera hadir.'),
+        behavior: SnackBarBehavior.fixed,
+      ),
     );
   }
 }
@@ -179,14 +202,30 @@ class _CatalogBanner extends StatelessWidget {
                 fontSize: MediaQuery.sizeOf(context).width < 600 ? 34 : 50,
                 color: Colors.white,
                 shadows: const [
-                  Shadow(color: SeeraColors.pinkPop, blurRadius: 0, offset: Offset(3, 3)),
-                  Shadow(color: SeeraColors.pinkPop, blurRadius: 0, offset: Offset(-3, -3)),
+                  Shadow(
+                    color: SeeraColors.pinkPop,
+                    blurRadius: 0,
+                    offset: Offset(3, 3),
+                  ),
+                  Shadow(
+                    color: SeeraColors.pinkPop,
+                    blurRadius: 0,
+                    offset: Offset(-3, -3),
+                  ),
                 ],
               ),
             ),
           ),
-          const Positioned(top: 14, left: 18, child: Icon(Icons.star_rounded, color: SeeraColors.lemon, size: 30)),
-          const Positioned(bottom: 14, right: 20, child: Icon(Icons.star_rounded, color: SeeraColors.lilac, size: 34)),
+          const Positioned(
+            top: 14,
+            left: 18,
+            child: Icon(Icons.star_rounded, color: SeeraColors.lemon, size: 30),
+          ),
+          const Positioned(
+            bottom: 14,
+            right: 20,
+            child: Icon(Icons.star_rounded, color: SeeraColors.lilac, size: 34),
+          ),
         ],
       ),
     );
@@ -206,13 +245,23 @@ class _LockerPainter extends CustomPainter {
     final panelWidth = size.width / 3;
     for (var panel = 0; panel < 3; panel++) {
       final left = panel * panelWidth;
-      final paint = Paint()..color = panel.isEven ? const Color(0x22FFFFFF) : const Color(0x18D6246E);
-      canvas.drawRect(Rect.fromLTWH(left, 0, panelWidth - 2, size.height), paint);
+      final paint = Paint()
+        ..color = panel.isEven
+            ? const Color(0x22FFFFFF)
+            : const Color(0x18D6246E);
+      canvas.drawRect(
+        Rect.fromLTWH(left, 0, panelWidth - 2, size.height),
+        paint,
+      );
       final vent = Paint()
         ..color = const Color(0x28D6246E)
         ..strokeWidth = 2;
       for (var y = 22.0; y < size.height; y += 30) {
-        canvas.drawLine(Offset(left + 12, y), Offset(left + panelWidth - 12, y), vent);
+        canvas.drawLine(
+          Offset(left + 12, y),
+          Offset(left + panelWidth - 12, y),
+          vent,
+        );
       }
     }
   }
@@ -237,7 +286,12 @@ class _CollectionsCarousel extends StatelessWidget {
       children: [
         const Text(
           'OUR COLLECTIONS',
-          style: TextStyle(color: SeeraColors.ink, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1),
+          style: TextStyle(
+            color: SeeraColors.ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -258,7 +312,11 @@ class _CollectionsCarousel extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.auto_awesome, size: 42, color: SeeraColors.pinkDeep),
+                      const Icon(
+                        Icons.auto_awesome,
+                        size: 42,
+                        color: SeeraColors.pinkDeep,
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -267,10 +325,16 @@ class _CollectionsCarousel extends StatelessWidget {
                           children: [
                             Text(
                               collection.$1,
-                              style: const TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900),
+                              style: const TextStyle(
+                                color: SeeraColors.ink,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                             const SizedBox(height: 6),
-                            Text(collection.$2, style: const TextStyle(color: SeeraColors.ink)),
+                            Text(
+                              collection.$2,
+                              style: const TextStyle(color: SeeraColors.ink),
+                            ),
                           ],
                         ),
                       ),
@@ -309,8 +373,13 @@ class _CategoryFilters extends StatelessWidget {
               onSelected: (_) => controller.selectCategory(category),
               selectedColor: SeeraColors.pinkPop,
               backgroundColor: Colors.white,
-              labelStyle: TextStyle(color: selected ? Colors.white : SeeraColors.ink, fontWeight: FontWeight.w700),
-              side: BorderSide(color: selected ? SeeraColors.pinkPop : SeeraColors.pinkSoft),
+              labelStyle: TextStyle(
+                color: selected ? Colors.white : SeeraColors.ink,
+                fontWeight: FontWeight.w700,
+              ),
+              side: BorderSide(
+                color: selected ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
+              ),
             );
           },
         ),
@@ -351,9 +420,15 @@ class _CatalogProductCard extends StatelessWidget {
                       top: 8,
                       left: 8,
                       child: DecoratedBox(
-                        decoration: BoxDecoration(color: SeeraColors.pinkSoft, borderRadius: BorderRadius.circular(20)),
+                        decoration: BoxDecoration(
+                          color: SeeraColors.pinkSoft,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           child: Text(
                             product.category,
                             style: const TextStyle(
@@ -377,7 +452,11 @@ class _CatalogProductCard extends StatelessWidget {
                       product.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w700, height: 1.2),
+                      style: const TextStyle(
+                        color: SeeraColors.ink,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -391,11 +470,18 @@ class _CatalogProductCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Row(
                       children: [
-                        const Icon(Icons.star, size: 14, color: Color(0xFFE5A700)),
+                        const Icon(
+                          Icons.star,
+                          size: 14,
+                          color: Color(0xFFE5A700),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${product.rating} (${product.reviewCount})',
-                          style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 11),
+                          style: const TextStyle(
+                            color: SeeraColors.greyMauve,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
@@ -432,7 +518,10 @@ class _CatalogSkeleton extends StatelessWidget {
               childAspectRatio: 0.69,
             ),
             itemBuilder: (context, index) => Container(
-              decoration: BoxDecoration(color: SeeraColors.pinkSoft, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: SeeraColors.pinkSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         },
@@ -463,8 +552,44 @@ class _CatalogEmpty extends StatelessWidget {
   }
 }
 
+class _CatalogLoadError extends StatelessWidget {
+  const _CatalogLoadError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 48),
+    child: Column(
+      children: [
+        const Icon(
+          Icons.cloud_off_outlined,
+          color: SeeraColors.pinkDeep,
+          size: 40,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: SeeraColors.greyMauve),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Muat ulang'),
+        ),
+      ],
+    ),
+  );
+}
+
 String _formatPrice(int price) {
   final digits = price.toString();
-  final formatted = digits.replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.');
+  final formatted = digits.replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]}.',
+  );
   return 'Rp$formatted';
 }

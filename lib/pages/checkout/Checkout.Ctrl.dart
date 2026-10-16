@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
+import '../../data/seera_api.dart';
 import '../../navigator.dart';
 import '../cart/Cart.Data.dart';
+import '../payment/Payment.Data.dart';
 import 'Checkout.Data.dart';
 
 class CheckoutCtrl {
@@ -27,6 +31,8 @@ class CheckoutCtrl {
     checkoutAddress.state = value;
     checkoutAddressError.state = null;
   }
+
+  void updateNote(String value) => checkoutNote.state = value;
 
   void toggleShowName(bool value) => checkoutShowName.state = value;
 
@@ -55,7 +61,9 @@ class CheckoutCtrl {
         ? 'Masukkan nomor WhatsApp yang valid.'
         : null;
     checkoutEmailError.state =
-        RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(checkoutEmail.state.trim())
+        RegExp(
+          r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+        ).hasMatch(checkoutEmail.state.trim())
         ? null
         : 'Masukkan alamat email yang valid.';
     checkoutAddressError.state = checkoutAddress.state.trim().length < 6
@@ -81,8 +89,62 @@ class CheckoutCtrl {
     }
 
     checkoutForm.submit(() async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      nav.to('/payment');
+      try {
+        final result = await SeeraApi.postForm('simpan_transaksi.php', {
+          'nama_pelanggan': checkoutName.state.trim(),
+          'whatsapp': checkoutWhatsapp.state.trim(),
+          'email': checkoutEmail.state.trim(),
+          'alamat': checkoutAddress.state.trim(),
+          'catatan': checkoutNote.state.trim(),
+          'subtotal': checkoutSubtotal.toString(),
+          'ongkir': checkoutShipping.toString(),
+          'kode_unik': checkoutUniqueCode.toString(),
+          'total': checkoutTotal.toString(),
+          'items': jsonEncode(
+            cartItems.state
+                .map(
+                  (item) => {
+                    'id_produk': item.product.id,
+                    'nama_produk': item.product.name,
+                    'varian': item.variant,
+                    'jumlah': item.quantity,
+                    'harga': item.product.price,
+                    'subtotal': item.product.price * item.quantity,
+                  },
+                )
+                .toList(growable: false),
+          ),
+        });
+        final responseData = result['data'];
+        final data = responseData is Map
+            ? Map<String, dynamic>.from(responseData)
+            : result;
+        final orderCode =
+            result['kode_pesanan'] ??
+            result['kode_transaksi'] ??
+            result['order_code'] ??
+            result['id_transaksi'] ??
+            data['kode_pesanan'] ??
+            data['kode_transaksi'] ??
+            data['order_code'] ??
+            data['id_transaksi'];
+        if (orderCode == null || orderCode.toString().trim().isEmpty) {
+          throw const SeeraApiException(
+            'Transaksi tersimpan tetapi server tidak mengirim kode pesanan.',
+          );
+        }
+        paymentOrderCode.state = orderCode.toString();
+        nav.to('/payment');
+      } catch (error) {
+        if (!context.mounted) return;
+        RM.scaffold.context = context;
+        RM.scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Pesanan gagal disimpan: $error'),
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
+      }
     });
   }
 }

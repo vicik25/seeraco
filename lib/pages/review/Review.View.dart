@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
+import '../order_track/OrderTrack.Data.dart';
 import 'Review.Ctrl.dart';
 import 'Review.Data.dart';
 
@@ -12,6 +13,7 @@ class ReviewView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
       appBar: AppBar(
@@ -26,36 +28,43 @@ class ReviewView extends StatelessWidget {
       ),
       body: Center(
         child: SizedBox(
-          width: 600,
+          width: screenWidth < 600 ? screenWidth : 600,
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              const _CompletedOrderBanner(),
-              const SizedBox(height: 16),
-              OnBuilder(
-                listenTo: reviewProducts,
-                builder: () {
-                  final products = reviewProducts.state;
-                  return Column(
-                    children: [
-                      for (var index = 0; index < products.length; index++) ...[
-                        if (index > 0) const SizedBox(height: 12),
-                        OnBuilder(
-                          listenTo: reviewRatings,
-                          builder: () => _ProductRatingCard(
-                            product: products[index],
-                            productIndex: index,
-                            rating: reviewRatings.state[index],
-                            onRatingChanged: _controller.selectRating,
-                          ),
-                        ),
-                      ],
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              const _ReviewTextCard(),
+              OnReactive(() {
+                if (!orderTrackCompleted.state) return const _ReviewUnavailableBanner();
+                return Column(
+                  children: [
+                    const _CompletedOrderBanner(),
+                    const SizedBox(height: 16),
+                    OnBuilder(
+                      listenTo: reviewProducts,
+                      builder: () {
+                        final products = reviewProducts.state;
+                        return Column(
+                          children: [
+                            for (var index = 0; index < products.length; index++) ...[
+                              if (index > 0) const SizedBox(height: 12),
+                              OnBuilder(
+                                listenTo: reviewRatings,
+                                builder: () => _ProductRatingCard(
+                                  product: products[index],
+                                  productIndex: index,
+                                  rating: reviewRatings.state[index],
+                                  onRatingChanged: _controller.selectRating,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const _ReviewTextCard(),
+                  ],
+                );
+              }),
             ],
           ),
         ),
@@ -73,27 +82,57 @@ class _CompletedOrderBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: SeeraColors.skyPastel, borderRadius: BorderRadius.circular(14)),
-      child: const Row(
+      child: Row(
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             backgroundColor: Colors.white,
             child: Icon(Icons.check_rounded, color: SeeraColors.pinkDeep),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Pesanan selesai',
                   style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Kode $reviewOrderCode · Bagikan ceritamu tentang pesanan ini.',
-                  style: TextStyle(color: SeeraColors.ink, fontSize: 12),
+                const SizedBox(height: 4),
+                OnReactive(
+                  () => Text(
+                    'Kode ${orderTrackCode.state} · Bagikan ceritamu tentang pesanan ini.',
+                    style: const TextStyle(color: SeeraColors.ink, fontSize: 12),
+                  ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewUnavailableBanner extends StatelessWidget {
+  const _ReviewUnavailableBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: SeeraColors.creamPaper,
+        border: Border.all(color: SeeraColors.pinkSoft),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.lock_outline, color: SeeraColors.pinkDeep),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Ulasan hanya bisa ditulis setelah pesanan selesai.',
+              style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -256,16 +295,19 @@ class _ReviewBottomBar extends StatelessWidget {
         color: Colors.white,
         border: Border(top: BorderSide(color: SeeraColors.pinkSoft)),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: SizedBox(
-            height: 50,
-            width: double.infinity,
-            child: OnFormSubmissionBuilder(
-              listenTo: reviewForm,
-              onSubmitting: () => const _SubmitReviewButton(isLoading: true),
-              child: _SubmitReviewButton(onPressed: onSubmit),
+      child: SizedBox(
+        height: 50,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SizedBox(
+              height: 50,
+              width: double.infinity,
+              child: OnFormSubmissionBuilder(
+                listenTo: reviewForm,
+                onSubmitting: () => const _SubmitReviewButton(isLoading: true),
+                child: OnReactive(() => _SubmitReviewButton(onPressed: orderTrackCompleted.state ? onSubmit : null)),
+              ),
             ),
           ),
         ),

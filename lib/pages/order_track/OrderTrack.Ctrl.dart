@@ -31,16 +31,13 @@ class OrderTrackCtrl {
         '',
       );
       final normalizedCode = orderTrackCode.state.trim().toUpperCase();
-      final isCompletedOrder = normalizedCode == completedReviewOrderCode;
-      final isKnownOrder =
-          normalizedCode == trackedOrderCode || isCompletedOrder;
-      final expectedWhatsapp = isCompletedOrder
-          ? trackedOrderWhatsapp
-          : orderTrackExpectedWhatsapp.state;
       final isMatched =
-          isKnownOrder && normalizedWhatsapp == expectedWhatsapp;
+          normalizedCode == savedOrderCode.state.toUpperCase() &&
+          normalizedWhatsapp ==
+              savedOrderWhatsapp.state.replaceAll(RegExp(r'\D'), '');
       orderTrackHasMatch.state = isMatched;
-      orderTrackCompleted.state = isMatched && isCompletedOrder;
+      orderTrackCompleted.state =
+          isMatched && orderTrackStatus.state.toLowerCase() == 'selesai';
       orderTrackHasSearched.state = true;
     });
   }

@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '../../data/seera_api.dart';
 import '../../domains/_models/product.dart';
 import '../theme/seera_colors.dart';
 
 class ProductArtwork extends StatelessWidget {
-  const ProductArtwork({
-    required this.product,
-    this.large = false,
-    super.key,
-  });
+  const ProductArtwork({required this.product, this.large = false, super.key});
 
   final Product product;
   final bool large;
 
   @override
   Widget build(BuildContext context) {
+    if (product.imageUrl.isNotEmpty) {
+      return Image.network(
+        SeeraApi.resolveImageUri(product.imageUrl).toString(),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _illustration(context),
+      );
+    }
+    return _illustration(context);
+  }
+
+  Widget _illustration(BuildContext context) {
     final size = large ? 156.0 : 96.0;
     final colors = product.colors;
     return DecoratedBox(

@@ -1,9 +1,14 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../checkout/Checkout.Data.dart';
 
 final paymentProofSelected = RM.inject<bool>(
   () => false,
+  autoDisposeWhenNotUsed: false,
+);
+final paymentProofFile = RM.inject<XFile?>(
+  () => null,
   autoDisposeWhenNotUsed: false,
 );
 final paymentForm = RM.injectForm();
@@ -15,9 +20,17 @@ final paymentCountdown = RM.injectStream<Duration>(
   initialState: const Duration(hours: 24),
 );
 
-const paymentOrderCode = 'SEERA-261013-001';
+final paymentOrderCode = RM.inject<String>(
+  () => '',
+  autoDisposeWhenNotUsed: false,
+);
 int get paymentTotal => checkoutTotal;
-const paymentBankName = 'Bank BCA';
-const paymentAccountNumber = '1234567890';
-const paymentAccountHolder = 'Seera.co_';
-const paymentProofFileName = 'bukti-transfer.jpg';
+const paymentBankName = String.fromEnvironment(
+  'SEERA_BANK_NAME',
+  defaultValue: 'Informasi rekening',
+);
+const paymentAccountNumber = String.fromEnvironment('SEERA_BANK_ACCOUNT');
+const paymentAccountHolder = String.fromEnvironment(
+  'SEERA_BANK_HOLDER',
+  defaultValue: 'Seera.co_',
+);

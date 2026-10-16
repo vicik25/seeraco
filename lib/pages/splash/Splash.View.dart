@@ -84,22 +84,19 @@ class _SplashAnimationState extends State<_SplashAnimation>
                           animation: _orbitController,
                           builder: (context, child) => CustomPaint(
                             painter: _OrbitPainter(
-                              progress: reduceMotion ? 0 : _orbitController.value,
+                              progress: reduceMotion
+                                  ? 0
+                                  : _orbitController.value,
                             ),
-                            child: SizedBox(
-                              width: paperWidth,
-                              height: 360,
-                            ),
+                            child: SizedBox(width: paperWidth, height: 360),
                           ),
                         ),
                         TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.8, end: 1),
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.elasticOut,
-                          builder: (context, scale, child) => Transform.scale(
-                            scale: scale,
-                            child: child,
-                          ),
+                          builder: (context, scale, child) =>
+                              Transform.scale(scale: scale, child: child),
                           child: const _SplashNote(),
                         ),
                       ],
@@ -121,15 +118,16 @@ class _SplashNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final logoSize = width < 380 ? 52.0 : 64.0;
-
     return Container(
       width: math.min(width - 64, 360),
       padding: const EdgeInsets.fromLTRB(20, 44, 20, 32),
       decoration: BoxDecoration(
         color: SeeraColors.creamPaper,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 3),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.75),
+          width: 3,
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x332B1B26),
@@ -150,20 +148,12 @@ class _SplashNote extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Text(
-            'Seera.co_',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: SeeraColors.pinkPop,
-              fontSize: logoSize,
-              height: 1,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -3,
-              fontFamily: 'Georgia',
-              shadows: const [
-                Shadow(color: Colors.white, blurRadius: 0, offset: Offset(2, 2)),
-              ],
-            ),
+          Image.asset(
+            'assets/images/logo.jpg',
+            width: math.min(width - 104, 280),
+            height: width < 380 ? 64 : 78,
+            fit: BoxFit.contain,
+            semanticLabel: 'Logo Seera.co_',
           ),
           const SizedBox(height: 12),
           const Text(
@@ -209,10 +199,13 @@ class _LockerPainter extends CustomPainter {
     final panelWidth = size.width / 3;
     final paint = Paint();
     for (var i = 0; i < 3; i++) {
-      final panel = Rect.fromLTWH(i * panelWidth, 0, panelWidth - 3, size.height);
-      paint.color = i.isEven
-          ? SeeraColors.pinkLocker
-          : const Color(0xFFFF9BC8);
+      final panel = Rect.fromLTWH(
+        i * panelWidth,
+        0,
+        panelWidth - 3,
+        size.height,
+      );
+      paint.color = i.isEven ? SeeraColors.pinkLocker : const Color(0xFFFF9BC8);
       canvas.drawRect(panel, paint);
 
       final ventPaint = Paint()
@@ -285,7 +278,8 @@ class _OrbitPainter extends CustomPainter {
     final path = Path();
     for (var i = 0; i < 10; i++) {
       final angle = -math.pi / 2 + i * math.pi / 5;
-      final point = center +
+      final point =
+          center +
           Offset(
             math.cos(angle) * (i.isEven ? radius : radius * 0.45),
             math.sin(angle) * (i.isEven ? radius : radius * 0.45),

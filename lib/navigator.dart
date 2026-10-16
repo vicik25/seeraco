@@ -3,6 +3,7 @@ import 'package:navigation_builder/navigation_builder.dart';
 import 'pages/cart/Cart.View.dart';
 import 'pages/catalog/Catalog.View.dart';
 import 'pages/about/About.View.dart';
+import 'pages/admin/Admin.View.dart';
 import 'pages/buyers/Buyers.View.dart';
 import 'pages/home/Home.View.dart';
 import 'pages/checkout/Checkout.View.dart';
@@ -27,6 +28,7 @@ final nav = NavigationBuilder.create(
     '/order-track': (RouteData data) => const OrderTrackView(),
     '/buyers': (RouteData data) => const BuyersView(),
     '/about': (RouteData data) => const AboutView(),
+    '/admin': (RouteData data) => const AdminView(),
     '/review': (RouteData data) => const ReviewView(),
     '/tasks': (RouteData data) => const TaskListContainer(),
   },

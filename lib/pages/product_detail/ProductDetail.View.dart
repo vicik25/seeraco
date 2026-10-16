@@ -5,6 +5,7 @@ import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/product_artwork.dart';
 import '../../domains/_models/product.dart';
 import '../../navigator.dart';
+import '../catalog/Catalog.Data.dart';
 import 'ProductDetail.Ctrl.dart';
 import 'ProductDetail.Data.dart';
 
@@ -15,6 +16,8 @@ class ProductDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    loadStoreData();
+    final screenWidth = MediaQuery.sizeOf(context).width;
     return Scaffold(
       backgroundColor: SeeraColors.pinkMist,
       appBar: AppBar(
@@ -22,9 +25,15 @@ class ProductDetailView extends StatelessWidget {
         foregroundColor: SeeraColors.pinkDeep,
         title: const Text(
           'Detail Produk',
-          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: SeeraColors.pinkDeep,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => RM.navigate.back(),
+        ),
         actions: [
           IconButton(
             tooltip: 'Keranjang belanja',
@@ -35,14 +44,19 @@ class ProductDetailView extends StatelessWidget {
       ),
       body: Center(
         child: SizedBox(
-          width: 800,
+          width: screenWidth < 1120 ? screenWidth : 1120,
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
               OnReactive(() {
                 final product = selectedProduct.state;
                 if (product == null) return const _MissingProduct();
-                return _ProductDetails(product: product);
+                return Column(
+                  children: [
+                    _ProductDetails(product: product),
+                    _ProductReviews(product: product),
+                  ],
+                );
               }),
             ],
           ),
@@ -136,7 +150,9 @@ class _ProductGallery extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(
-                  color: index == 0 ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
+                  color: index == 0
+                      ? SeeraColors.pinkPop
+                      : SeeraColors.pinkSoft,
                   width: index == 0 ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -147,6 +163,93 @@ class _ProductGallery extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ProductReviews extends StatelessWidget {
+  const _ProductReviews({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    return OnReactive(() {
+      final reviews = productReviews.state
+          .where(
+            (review) =>
+                review.productName.toLowerCase() == product.name.toLowerCase(),
+          )
+          .toList(growable: false);
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Ulasan pelanggan',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: SeeraColors.ink,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (isReviewsLoading.state)
+              const Center(
+                child: CircularProgressIndicator(color: SeeraColors.pinkPop),
+              )
+            else if (reviewsLoadError.state != null)
+              Text(
+                reviewsLoadError.state!,
+                style: const TextStyle(color: SeeraColors.greyMauve),
+              )
+            else if (reviews.isEmpty)
+              const Text(
+                'Belum ada ulasan untuk produk ini.',
+                style: TextStyle(color: SeeraColors.greyMauve),
+              )
+            else
+              for (final review in reviews)
+                Card(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            for (var star = 1; star <= 5; star++)
+                              Icon(
+                                star <= review.rating
+                                    ? Icons.star
+                                    : Icons.star_outline,
+                                color: const Color(0xFFE5A700),
+                                size: 18,
+                              ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                review.customerName.isEmpty
+                                    ? 'Pelanggan Seera'
+                                    : review.customerName,
+                                style: const TextStyle(
+                                  color: SeeraColors.ink,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(review.comment),
+                      ],
+                    ),
+                  ),
+                ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -166,21 +269,29 @@ class _ProductInformation extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         DecoratedBox(
-          decoration: BoxDecoration(color: SeeraColors.pinkSoft, borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(
+            color: SeeraColors.pinkSoft,
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Text(
               product.category.toUpperCase(),
-              style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800, fontSize: 11),
+              style: const TextStyle(
+                color: SeeraColors.pinkDeep,
+                fontWeight: FontWeight.w800,
+                fontSize: 11,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 10),
         Text(
           product.name,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(color: SeeraColors.ink, fontWeight: FontWeight.w900),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: SeeraColors.ink,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -208,14 +319,22 @@ class _ProductInformation extends StatelessWidget {
         const SizedBox(height: 24),
         const Text(
           'PILIH WARNA',
-          style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900, letterSpacing: 0.7),
+          style: TextStyle(
+            color: SeeraColors.ink,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.7,
+          ),
         ),
         const SizedBox(height: 10),
         const _VariantPicker(),
         const SizedBox(height: 24),
         const Text(
           'JUMLAH',
-          style: TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w900, letterSpacing: 0.7),
+          style: TextStyle(
+            color: SeeraColors.ink,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.7,
+          ),
         ),
         const SizedBox(height: 10),
         const _QuantitySelector(),
@@ -254,10 +373,17 @@ class _VariantPicker extends StatelessWidget {
               onSelected: (_) => controller.selectVariant(variant),
               selectedColor: SeeraColors.pinkSoft,
               backgroundColor: Colors.white,
-              avatar: CircleAvatar(backgroundColor: colors[variant]),
-              labelStyle: const TextStyle(color: SeeraColors.ink, fontWeight: FontWeight.w600),
+              avatar: CircleAvatar(
+                backgroundColor: colors[variant] ?? SeeraColors.pinkPop,
+              ),
+              labelStyle: const TextStyle(
+                color: SeeraColors.ink,
+                fontWeight: FontWeight.w600,
+              ),
               side: BorderSide(
-                color: selectedProductVariant.state == variant ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
+                color: selectedProductVariant.state == variant
+                    ? SeeraColors.pinkPop
+                    : SeeraColors.pinkSoft,
               ),
             ),
         ],
@@ -285,7 +411,9 @@ class _QuantitySelector extends StatelessWidget {
           children: [
             IconButton(
               tooltip: 'Kurangi jumlah',
-              onPressed: selectedProductQuantity.state > 1 ? controller.decreaseQuantity : null,
+              onPressed: selectedProductQuantity.state > 1
+                  ? controller.decreaseQuantity
+                  : null,
               icon: const Icon(Icons.remove),
             ),
             SizedBox(
@@ -298,7 +426,9 @@ class _QuantitySelector extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Tambah jumlah',
-              onPressed: selectedProductQuantity.state < 99 ? controller.increaseQuantity : null,
+              onPressed: selectedProductQuantity.state < 99
+                  ? controller.increaseQuantity
+                  : null,
               icon: const Icon(Icons.add),
             ),
           ],
@@ -339,7 +469,11 @@ class _PreOrderNote extends StatelessWidget {
 }
 
 class _DetailActions extends StatelessWidget {
-  const _DetailActions({required this.product, required this.onAdd, required this.onBuy});
+  const _DetailActions({
+    required this.product,
+    required this.onAdd,
+    required this.onBuy,
+  });
 
   final Product product;
   final VoidCallback onAdd;
@@ -354,35 +488,38 @@ class _DetailActions extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1120),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: onAdd,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: SeeraColors.pinkDeep,
-                        side: const BorderSide(color: SeeraColors.pinkPop),
-                        minimumSize: const Size(0, 48),
+          child: SizedBox(
+            height: 48,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onAdd,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: SeeraColors.pinkDeep,
+                          side: const BorderSide(color: SeeraColors.pinkPop),
+                          minimumSize: const Size(0, 48),
+                        ),
+                        child: const Text('Tambah ke Keranjang'),
                       ),
-                      child: const Text('Tambah ke Keranjang'),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: onBuy,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: SeeraColors.pinkDeep,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onBuy,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: SeeraColors.pinkDeep,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 48),
+                        ),
+                        child: const Text('Beli Sekarang'),
                       ),
-                      child: const Text('Beli Sekarang'),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -403,11 +540,18 @@ class _MissingProduct extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.inventory_2_outlined, size: 48, color: SeeraColors.greyMauve),
+            const Icon(
+              Icons.inventory_2_outlined,
+              size: 48,
+              color: SeeraColors.greyMauve,
+            ),
             const SizedBox(height: 12),
             const Text('Pilih produk dari katalog untuk melihat detailnya.'),
             const SizedBox(height: 16),
-            FilledButton(onPressed: () => nav.to('/catalog'), child: const Text('Lihat Katalog')),
+            FilledButton(
+              onPressed: () => nav.to('/catalog'),
+              child: const Text('Lihat Katalog'),
+            ),
           ],
         ),
       ),
@@ -417,6 +561,9 @@ class _MissingProduct extends StatelessWidget {
 
 String _formatPrice(int price) {
   final digits = price.toString();
-  final formatted = digits.replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.');
+  final formatted = digits.replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]}.',
+  );
   return 'Rp$formatted';
 }
