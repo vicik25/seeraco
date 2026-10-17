@@ -23,6 +23,8 @@ class HomeCtrl {
 
   void openAbout() => nav.to('/about');
 
+  void openReviews() => nav.to('/customer-reviews');
+
   void openOrderTrack() => nav.to('/order-track');
 
   void openAdmin() => nav.to('/admin');

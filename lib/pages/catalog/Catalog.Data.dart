@@ -1,6 +1,6 @@
 import 'package:states_rebuilder/states_rebuilder.dart';
 
-import '../../data/seera_api.dart';
+import '../../data/seera_supabase.dart';
 import '../../domains/_models/product.dart';
 import '../../domains/_models/product_review.dart';
 import '../../domains/_models/testimonial.dart';
@@ -63,7 +63,7 @@ Future<void> _loadStoreData() async {
 
 Future<void> _loadProducts() async {
   try {
-    final rows = await SeeraApi.getList('get_produk.php');
+    final rows = await SeeraSupabase.fetchProducts();
     final products = rows
         .map(Product.fromJson)
         .where((product) => product.name.isNotEmpty)
@@ -80,7 +80,7 @@ Future<void> _loadProducts() async {
 
 Future<void> _loadReviews() async {
   try {
-    final rows = await SeeraApi.getList('get_review.php');
+    final rows = await SeeraSupabase.fetchReviews();
     final reviews = rows
         .map(ProductReview.fromJson)
         .where((review) => review.comment.isNotEmpty)

@@ -5,35 +5,42 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:seeraco/data/seera_api.dart';
+import 'package:seeraco/data/seera_supabase.dart';
 import 'package:seeraco/pages/home/Home.View.dart';
 import 'package:seeraco/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:seeraco/tasks/task.dart';
 import 'package:seeraco/tasks/task_list.dart';
 import 'package:seeraco/tasks/task_repository.dart';
 
 void main() {
   setUp(() {
-    SeeraApi.setClientForTesting(
-      MockClient((request) async {
-        if (request.url.path.endsWith('get_produk.php')) {
-          return http.Response(
-            '[{"id_produk":"test-watch","nama_produk":"Produk API Tes","harga":45000,"kategori":"Jam Beads","deskripsi":"Dari respons API"}]',
-            200,
-          );
-        }
-        if (request.url.path.endsWith('get_review.php')) {
-          return http.Response(
-            '[{"id_review":"review-test","nama_produk":"Produk API Tes","nama_pelanggan":"Pelanggan API","ulasan":"Ulasan yang dimuat dari API.","rating":5}]',
-            200,
-          );
-        }
-        return http.Response('{"success":true}', 200);
-      }),
+    SeeraSupabase.setClientForTesting(
+      SupabaseClient(
+        SeeraSupabase.url,
+        SeeraSupabase.publishableKey,
+        httpClient: MockClient((request) async {
+          if (request.url.path.endsWith('/Produk')) {
+            return http.Response(
+              '[{"kode_produk":"test-watch","nama_produk":"Produk API Tes","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Dari Supabase","status_tampil":true}]',
+              200,
+              request: request,
+            );
+          }
+          if (request.url.path.endsWith('/Review')) {
+            return http.Response(
+              '[{"id_review":1,"id_transaksi":null,"nama_customer":"Pelanggan API","komentar":"Ulasan yang dimuat dari Supabase.","rating":5,"tanggal_review":"2026-10-17T03:33:03Z"}]',
+              200,
+              request: request,
+            );
+          }
+          return http.Response('[]', 200, request: request);
+        }),
+      ),
     );
   });
 
-  tearDown(SeeraApi.clearClientForTesting);
+  tearDown(SeeraSupabase.clearClientForTesting);
 
   testWidgets('loads tasks and supports completion and deletion', (
     tester,

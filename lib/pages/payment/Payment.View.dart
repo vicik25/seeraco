@@ -3,14 +3,35 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/order_progress_stepper.dart';
+import '../../data/seera_supabase.dart';
 import '../checkout/Checkout.Data.dart';
 import 'Payment.Ctrl.dart';
 import 'Payment.Data.dart';
 
-class PaymentView extends StatelessWidget {
+class PaymentView extends StatefulWidget {
   const PaymentView({super.key});
 
+  @override
+  State<PaymentView> createState() => _PaymentViewState();
+}
+
+class _PaymentViewState extends State<PaymentView> {
   static const _controller = PaymentCtrl();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoreSettings();
+  }
+
+  Future<void> _loadStoreSettings() async {
+    storePaymentSettingsError.state = null;
+    try {
+      storePaymentSettings.state = await SeeraSupabase.fetchStoreSettings();
+    } catch (error) {
+      storePaymentSettingsError.state = error.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +64,26 @@ class PaymentView extends StatelessWidget {
               const _OrderCreatedCard(),
               const SizedBox(height: 14),
               const _PaymentAmountCard(),
+              OnReactive(
+                () => storePaymentSettingsError.state == null
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Text(
+                          'Informasi rekening toko belum dapat dimuat.',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+              ),
               const SizedBox(height: 14),
               const _PaymentRecipientCard(),
               const SizedBox(height: 14),
               _BankAccountCard(
                 onCopy: () => _controller.copyText(
                   context,
-                  paymentAccountNumber,
+                  currentPaymentAccountNumber,
                   'Nomor rekening',
                 ),
               ),
@@ -385,47 +419,47 @@ class _BankAccountCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 72,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: SeeraColors.skyPastel,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  paymentBankName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: SeeraColors.ink,
-                    fontWeight: FontWeight.w900,
+          OnReactive(
+            () => Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: SeeraColors.skyPastel,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    currentPaymentBankName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: SeeraColors.ink,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OnReactive(
-                  () => Column(
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        paymentBankName,
+                        currentPaymentBankName,
                         style: const TextStyle(
                           color: SeeraColors.greyMauve,
                           fontSize: 12,
                         ),
                       ),
                       const SizedBox(height: 3),
-                      paymentAccountNumber.isEmpty
+                      currentPaymentAccountNumber.isEmpty
                           ? const Text(
                               'Nomor rekening belum diatur',
                               style: TextStyle(color: SeeraColors.greyMauve),
                             )
                           : SelectableText(
-                              paymentAccountNumber,
+                              currentPaymentAccountNumber,
                               style: const TextStyle(
                                 color: SeeraColors.ink,
                                 fontFamily: 'monospace',
@@ -444,13 +478,13 @@ class _BankAccountCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: onCopy,
-                icon: const Icon(Icons.copy_rounded),
-                color: SeeraColors.pinkDeep,
-              ),
-            ],
+                IconButton(
+                  onPressed: onCopy,
+                  icon: const Icon(Icons.copy_rounded),
+                  color: SeeraColors.pinkDeep,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -476,14 +510,26 @@ class _QrisCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Center(
-            child: Image.asset(
-              'assets/images/qris.jpeg',
-              height: 240,
-              fit: BoxFit.contain,
-              semanticLabel: 'Kode QRIS Seera.co_',
-            ),
-          ),
+          OnReactive(() {
+            final qrisUrl = currentPaymentQrisUrl;
+            return Center(
+              child: qrisUrl.isEmpty
+                  ? Image.asset(
+                      'assets/images/qris.jpeg',
+                      height: 240,
+                      fit: BoxFit.contain,
+                      semanticLabel: 'Kode QRIS Seera.co_',
+                    )
+                  : Image.network(
+                      qrisUrl,
+                      height: 240,
+                      fit: BoxFit.contain,
+                      semanticLabel: 'Kode QRIS Seera.co_',
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Text('Gambar QRIS tidak dapat dimuat.'),
+                    ),
+            );
+          }),
           const SizedBox(height: 8),
           const Text(
             'Pindai kode QR dengan aplikasi pembayaran pilihanmu.',

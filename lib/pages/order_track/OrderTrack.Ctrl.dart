@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
+import '../../data/seera_supabase.dart';
+import '../../domains/_models/cart_item.dart';
+import '../../domains/_models/product.dart';
 import '../../navigator.dart';
 import 'OrderTrack.Data.dart';
 
@@ -25,19 +28,59 @@ class OrderTrackCtrl {
     }
 
     orderTrackForm.submit(() async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      final normalizedWhatsapp = orderTrackWhatsapp.state.replaceAll(
-        RegExp(r'\D'),
-        '',
-      );
-      final normalizedCode = orderTrackCode.state.trim().toUpperCase();
-      final isMatched =
-          normalizedCode == savedOrderCode.state.toUpperCase() &&
-          normalizedWhatsapp ==
-              savedOrderWhatsapp.state.replaceAll(RegExp(r'\D'), '');
-      orderTrackHasMatch.state = isMatched;
-      orderTrackCompleted.state =
-          isMatched && orderTrackStatus.state.toLowerCase() == 'selesai';
+      orderTrackLookupError.state = null;
+      try {
+        final order = await SeeraSupabase.findOrder(
+          orderCode: orderTrackCode.state.trim(),
+          whatsapp: orderTrackWhatsapp.state,
+        );
+        if (order == null) {
+          orderTrackHasMatch.state = false;
+          orderTrackHasSearched.state = true;
+          return;
+        }
+        final details = order['Detail_Penjualan'];
+        final detailRows = details is List
+            ? details.whereType<Map>().toList(growable: false)
+            : const <Map>[];
+        final productIds = detailRows
+            .map((row) => row['kode_produk']?.toString() ?? '')
+            .where((id) => id.isNotEmpty)
+            .toList(growable: false);
+        final productRows = await SeeraSupabase.fetchProductsByIds(productIds);
+        final products = {
+          for (final row in productRows)
+            (row['kode_produk']?.toString() ?? ''): Product.fromJson(row),
+        };
+        orderTrackItems.state = [
+          for (final detail in detailRows)
+            if (products[detail['kode_produk']?.toString()] case final product?)
+              CartItem(
+                product: product,
+                variant: '',
+                quantity: int.tryParse(detail['jumlah'].toString()) ?? 1,
+              ),
+        ];
+        final id = order['id_transaksi']?.toString() ?? '';
+        orderTrackCode.state = id;
+        orderTrackCustomerName.state = order['nama_customer']?.toString() ?? '';
+        orderTrackAddress.state = order['alamat']?.toString() ?? '';
+        orderTrackStatus.state =
+            order['status']?.toString() ?? 'Menunggu Pembayaran';
+        orderTrackTotal.state =
+            int.tryParse(order['total_bayar']?.toString() ?? '') ?? 0;
+        orderTrackExpectedWhatsapp.state = SeeraSupabase.normalizeWhatsapp(
+          order['whatsapp']?.toString() ?? '',
+        );
+        orderTrackHasMatch.state = true;
+        orderTrackCompleted.state =
+            orderTrackStatus.state.toLowerCase() == 'selesai';
+        savedOrderCode.state = id;
+        savedOrderWhatsapp.state = orderTrackExpectedWhatsapp.state;
+      } catch (error) {
+        orderTrackLookupError.state = error.toString();
+        orderTrackHasMatch.state = false;
+      }
       orderTrackHasSearched.state = true;
     });
   }

@@ -14,6 +14,10 @@ final orderTrackAddress = RM.inject<String>(
   () => '',
   autoDisposeWhenNotUsed: false,
 );
+final orderTrackCustomerName = RM.inject<String>(
+  () => '',
+  autoDisposeWhenNotUsed: false,
+);
 final orderTrackStatus = RM.inject<String>(
   () => '',
   autoDisposeWhenNotUsed: false,
@@ -33,6 +37,10 @@ final orderTrackItems = RM.inject<List<CartItem>>(
 final orderTrackTotal = RM.inject<int>(() => 0, autoDisposeWhenNotUsed: false);
 final orderTrackHasSearched = RM.inject<bool>(
   () => false,
+  autoDisposeWhenNotUsed: false,
+);
+final orderTrackLookupError = RM.inject<String?>(
+  () => null,
   autoDisposeWhenNotUsed: false,
 );
 final orderTrackHasMatch = RM.inject<bool>(

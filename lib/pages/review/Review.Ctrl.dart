@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../navigator.dart';
-import '../../data/seera_api.dart';
+import '../../data/seera_supabase.dart';
 import '../order_track/OrderTrack.Data.dart';
 import '../catalog/Catalog.Data.dart';
 import 'Review.Data.dart';
@@ -39,7 +39,8 @@ class ReviewCtrl {
       );
       return;
     }
-    if (reviewRatings.state.any((rating) => rating == 0)) {
+    if (reviewRatings.state.isEmpty ||
+        reviewRatings.state.any((rating) => rating == 0)) {
       RM.scaffold.context = context;
       RM.scaffold.showSnackBar(
         const SnackBar(
@@ -62,14 +63,15 @@ class ReviewCtrl {
 
     reviewForm.submit(() async {
       try {
-        for (var index = 0; index < reviewProducts.state.length; index++) {
-          await SeeraApi.postForm('simpan_review.php', {
-            'kode_pesanan': orderTrackCode.state,
-            'nama_produk': reviewProducts.state[index],
-            'rating': reviewRatings.state[index].toString(),
-            'ulasan': reviewText.state.trim(),
-          });
-        }
+        await SeeraSupabase.createReview(
+          orderId: int.tryParse(orderTrackCode.state) ?? orderTrackCode.state,
+          customerName: orderTrackCustomerName.state,
+          rating:
+              (reviewRatings.state.reduce((a, b) => a + b) /
+                      reviewRatings.state.length)
+                  .round(),
+          comment: reviewText.state.trim(),
+        );
         await loadStoreData(refresh: true);
         if (!context.mounted) return;
         RM.scaffold.context = context;

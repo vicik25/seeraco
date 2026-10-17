@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
-import '../../data/seera_api.dart';
+import '../../data/seera_supabase.dart';
 import '../../navigator.dart';
 import '../cart/Cart.Data.dart';
 import '../payment/Payment.Data.dart';
@@ -90,49 +88,16 @@ class CheckoutCtrl {
 
     checkoutForm.submit(() async {
       try {
-        final result = await SeeraApi.postForm('simpan_transaksi.php', {
-          'nama_pelanggan': checkoutName.state.trim(),
-          'whatsapp': checkoutWhatsapp.state.trim(),
-          'email': checkoutEmail.state.trim(),
-          'alamat': checkoutAddress.state.trim(),
-          'catatan': checkoutNote.state.trim(),
-          'subtotal': checkoutSubtotal.toString(),
-          'ongkir': checkoutShipping.toString(),
-          'kode_unik': checkoutUniqueCode.toString(),
-          'total': checkoutTotal.toString(),
-          'items': jsonEncode(
-            cartItems.state
-                .map(
-                  (item) => {
-                    'id_produk': item.product.id,
-                    'nama_produk': item.product.name,
-                    'varian': item.variant,
-                    'jumlah': item.quantity,
-                    'harga': item.product.price,
-                    'subtotal': item.product.price * item.quantity,
-                  },
-                )
-                .toList(growable: false),
-          ),
-        });
-        final responseData = result['data'];
-        final data = responseData is Map
-            ? Map<String, dynamic>.from(responseData)
-            : result;
-        final orderCode =
-            result['kode_pesanan'] ??
-            result['kode_transaksi'] ??
-            result['order_code'] ??
-            result['id_transaksi'] ??
-            data['kode_pesanan'] ??
-            data['kode_transaksi'] ??
-            data['order_code'] ??
-            data['id_transaksi'];
-        if (orderCode == null || orderCode.toString().trim().isEmpty) {
-          throw const SeeraApiException(
-            'Transaksi tersimpan tetapi server tidak mengirim kode pesanan.',
-          );
-        }
+        final orderCode = await SeeraSupabase.createOrder(
+          customerName: checkoutName.state.trim(),
+          whatsapp: checkoutWhatsapp.state,
+          email: checkoutEmail.state.trim(),
+          address: checkoutAddress.state.trim(),
+          shipping: checkoutShipping,
+          uniqueCode: checkoutUniqueCode,
+          total: checkoutTotal,
+          items: cartItems.state,
+        );
         paymentOrderCode.state = orderCode.toString();
         nav.to('/payment');
       } catch (error) {

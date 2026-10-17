@@ -1,68 +1,81 @@
 # Seera.co_
 
-Flutter storefront for Seera.co_ with pink locker branding.
+Flutter storefront and admin panel backed by Supabase.
 
 ## Run
 
-```sh
+```powershell
 flutter pub get
 flutter run
 ```
 
-The storefront reads products from `get_produk.php` and reviews from
-`get_review.php`. It posts checkouts to `simpan_transaksi.php`, uploads JPG/PNG
-payment proof to `upload_bukti.php`, posts reviews to `simpan_review.php`, and
-exposes product/review administration through `/admin` using
-`update_produk.php` and `hapus_review.php`.
+Supabase is initialized in `lib/main.dart`. The client uses the project's
+publishable key, which is intended for client applications; never replace it
+with a `service_role` secret. Configure Row Level Security (RLS) and Storage
+policies in Supabase before enabling production writes.
 
-The Flutter client accepts list responses as a JSON array or as a `data`,
-`produk`, `review`, or `reviews` array. Product records should provide
-`nama_produk` and `harga` or `harga_jual`; `id_produk` and `kode_produk` are
-supported as identifiers. The client also accepts `hpp_satuan`,
-`gambar_produk`, and other common aliases. Review records should provide an
-ID, customer name (`nama_customer` is supported), review text, and rating.
+## Supabase tables and data mapping
 
-Override the API origin when running or building against a different backend:
+- `Produk`: customer screens query rows with `status_tampil = true`.
+  Product data maps `kode_produk`, `nama_produk`, `kategori`, `deskripsi`,
+  `harga_jual`, `hpp_satuan`, `penanda`, `gambar`, and `stok`.
+- `Penjualan`: checkout inserts customer/address/contact fields, `ongkir`,
+  `kode_unik`, `total_bayar`, and initial `status`. The returned
+  `id_transaksi` is the order code used by payment and tracking.
+- `Detail_Penjualan`: rows use `id` as the foreign key to `Penjualan.id_transaksi`,
+  plus `kode_produk` and `jumlah`.
+- `Review`: reads and writes `id_transaksi`, `nama_customer`, `rating`, and
+  `komentar`. Customer reviews can be submitted without an `id_transaksi`;
+  reviews written from a completed order may include it. The current table has
+  no product-name column.
+- `Pengaturan`: row `id = 1` stores `nama_bank`, `nomor_rekening`, and
+  `qris_url`. The admin settings page updates bank details and uploads QRIS
+  images into the `uploads` Storage bucket. Customer payment reads the same
+  row and falls back to the bundled QRIS asset if no URL is configured.
 
-```powershell
-flutter run --dart-define=SEERA_API_BASE_URL=https://api.example.com/
-```
+The current database schema does not expose a checkout note, item variant,
+line-item price/subtotal, or order subtotal column. Those values cannot be
+persisted by this client without a matching database migration. The application
+does not fabricate those fields or send unknown columns.
 
-The transaction endpoint receives form-encoded customer details, subtotal,
-`ongkir`, unique code, total, and an `items` field containing a JSON array. Its
-success response must return an order identifier such as `kode_pesanan` or
-`order_code`. Payment proof uploads
-use multipart field `bukti` and include `kode_pesanan` and `status=Proses`.
-Product edits use multipart field `gambar`; review deletion sends `id_review`.
-The bank name, account number, and account holder can be supplied at build time:
+## Storage
 
-```powershell
-flutter run --dart-define=SEERA_BANK_NAME=BCA `
-  --dart-define=SEERA_BANK_ACCOUNT=YOUR_ACCOUNT_NUMBER `
-  --dart-define=SEERA_BANK_HOLDER=Seera.co_
-```
+Product images and payment proof files are uploaded to the `uploads` bucket.
+The current client stores the bucket's public URL in `Produk.gambar` and
+`Penjualan.bukti_bayar`; configure the bucket as public and add Storage upload
+policies for the intended roles if using this setup. Public buckets make every
+object URL readable by anyone who has it. For production payment receipts,
+prefer a separate private bucket and signed-URL/server-function flow instead
+of making receipts public.
 
-`assets/images/qris.jpeg` is the default QRIS image. The logo is read from
-`assets/images/logo.jpg`.
+## Admin access and security
 
-## Backend requirements still needed
+The current `/admin` form checks `username` and `password` against the `Users`
+table and stores only the matching user's non-password fields in in-memory
+client state. This is a UI session, not Supabase authentication. Do not store
+plaintext passwords or add an anonymous `SELECT` policy that exposes the
+`Users` table to make this login work. Prefer Supabase Auth with admin roles in
+trusted JWT `app_metadata`, or a server-side RPC/Edge Function that verifies
+hashed credentials and issues a properly scoped session. Until then, the
+client-side admin state is not an authorization boundary and admin operations
+still need valid RLS policies; do not create broad anonymous `UPDATE`/`DELETE`
+policies on orders, products, or reviews.
 
-The supplied API list does not include endpoints/contracts for admin order
-listing and status/refund updates, dashboard metrics and external sales,
-persisted bank/QRIS settings, customer order lookup, or the public buyer
-listing. Those sections are deliberately left without fabricated data.
-Product creation is also not exposed by the supplied `update_produk.php`
-contract. The admin endpoints must enforce authentication/authorization on the
-server; a hidden Flutter route is not an access-control boundary.
+Customer checkout and review inserts must be allowed by narrowly scoped RLS
+policies. Proof upload and the `Penjualan` status update must also be scoped to
+the owner of that order. Since this storefront has no customer authentication,
+do not authorize order updates based only on an ID supplied by the client;
+use an Edge Function/RPC that verifies the order ID together with the
+customer's WhatsApp number before updating `bukti_bayar` and status. Configure
+the `uploads` Storage policies to match the same access model.
 
-The current `seeraco.kesug.com` host serves a JavaScript/cookie challenge
-instead of JSON to HTTP clients, and its API responses do not include
-`Access-Control-Allow-Origin`. This makes browser `fetch` fail even though the
-same URL can show data after being opened directly in a browser. Configure the
-hosting/WAF to skip that challenge for the PHP API endpoints and return JSON
-directly. Also configure every endpoint (including `OPTIONS` preflight) to
-allow the exact storefront origin, `GET, POST, OPTIONS`, and the request
-headers used by the client. Flutter Web cannot add response-side CORS headers
-or execute an HTML challenge returned in place of API JSON. Deploy the API over
-HTTPS; the app now reports this server issue explicitly instead of showing only
-a generic fetch exception.
+The configured project currently returns no rows from `Produk`,
+`Penjualan`, and `Detail_Penjualan`; `Review` has records. Populate the Supabase
+product table and configure policies before expecting products or admin data
+to appear. Empty tables are shown as empty states rather than replaced with
+sample data.
+
+## Branding
+
+The local logo is `assets/logo.jpg` and the default QRIS is
+`assets/images/qris.jpeg`. Both are bundled with the app.

@@ -149,7 +149,7 @@ class _SplashNote extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Image.asset(
-            'assets/images/logo.jpg',
+            'assets/logo.jpg',
             width: math.min(width - 104, 280),
             height: width < 380 ? 64 : 78,
             fit: BoxFit.contain,

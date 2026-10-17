@@ -1,6 +1,7 @@
 import 'package:navigation_builder/navigation_builder.dart';
 
 import 'pages/cart/Cart.View.dart';
+import 'pages/customer_reviews/CustomerReviews.View.dart';
 import 'pages/catalog/Catalog.View.dart';
 import 'pages/about/About.View.dart';
 import 'pages/admin/Admin.View.dart';
@@ -30,6 +31,7 @@ final nav = NavigationBuilder.create(
     '/about': (RouteData data) => const AboutView(),
     '/admin': (RouteData data) => const AdminView(),
     '/review': (RouteData data) => const ReviewView(),
+    '/customer-reviews': (RouteData data) => const CustomerReviewsView(),
     '/tasks': (RouteData data) => const TaskListContainer(),
   },
 );

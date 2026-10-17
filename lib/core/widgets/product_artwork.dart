@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../data/seera_api.dart';
+import '../../data/seera_supabase.dart';
 import '../../domains/_models/product.dart';
 import '../theme/seera_colors.dart';
 
@@ -14,7 +14,7 @@ class ProductArtwork extends StatelessWidget {
   Widget build(BuildContext context) {
     if (product.imageUrl.isNotEmpty) {
       return Image.network(
-        SeeraApi.resolveImageUri(product.imageUrl).toString(),
+        SeeraSupabase.resolveImageUrl(product.imageUrl),
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => _illustration(context),
       );

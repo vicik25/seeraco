@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
-import '../../data/seera_api.dart';
+import '../../data/seera_supabase.dart';
 import '../../domains/_models/cart_item.dart';
 import '../../navigator.dart';
 import '../cart/Cart.Data.dart';
@@ -60,11 +60,10 @@ class PaymentCtrl {
 
     paymentForm.submit(() async {
       try {
-        final result = await SeeraApi.postFields(
-          'upload_bukti.php',
-          {'kode_pesanan': paymentOrderCode.state, 'status': 'Proses'},
+        await SeeraSupabase.uploadPaymentProof(
+          orderId:
+              int.tryParse(paymentOrderCode.state) ?? paymentOrderCode.state,
           file: proof,
-          fileField: 'bukti',
         );
         reviewProducts.state = cartItems.state
             .map((item) => item.product.name)
@@ -74,23 +73,12 @@ class PaymentCtrl {
         orderTrackItems.state = List<CartItem>.unmodifiable(cartItems.state);
         orderTrackTotal.state = checkoutTotal;
         orderTrackCode.state = paymentOrderCode.state;
+        orderTrackCustomerName.state = checkoutName.state.trim();
         savedOrderCode.state = paymentOrderCode.state;
         orderTrackWhatsapp.state = checkoutWhatsapp.state;
         savedOrderWhatsapp.state = checkoutWhatsapp.state;
         orderTrackAddress.state = checkoutAddress.state;
-        final responseStatus = result['status']?.toString();
-        const supportedStatuses = {
-          'menunggu pembayaran',
-          'proses',
-          'dikirim',
-          'selesai',
-          'gagal',
-        };
-        orderTrackStatus.state =
-            responseStatus != null &&
-                supportedStatuses.contains(responseStatus.toLowerCase())
-            ? responseStatus
-            : 'Proses';
+        orderTrackStatus.state = 'Proses';
         orderTrackExpectedWhatsapp.state = checkoutWhatsapp.state.replaceAll(
           RegExp(r'\D'),
           '',

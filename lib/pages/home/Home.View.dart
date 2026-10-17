@@ -31,6 +31,9 @@ class HomeView extends StatelessWidget {
           children: [
             _HomeHeader(
               onCatalog: _controller.openCatalog,
+              onReviews: _controller.openReviews,
+              onOrderTrack: _controller.openOrderTrack,
+              onAbout: _controller.openAbout,
               onCart: _controller.openCart,
             ),
             Expanded(
@@ -103,6 +106,11 @@ class HomeView extends StatelessWidget {
                                 icon: const Icon(Icons.local_shipping_outlined),
                                 label: const Text('Cek Pesanan'),
                               ),
+                              OutlinedButton.icon(
+                                onPressed: _controller.openReviews,
+                                icon: const Icon(Icons.rate_review_outlined),
+                                label: const Text('Ulasan'),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 32),
@@ -122,9 +130,18 @@ class HomeView extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.onCatalog, required this.onCart});
+  const _HomeHeader({
+    required this.onCatalog,
+    required this.onReviews,
+    required this.onOrderTrack,
+    required this.onAbout,
+    required this.onCart,
+  });
 
   final VoidCallback onCatalog;
+  final VoidCallback onReviews;
+  final VoidCallback onOrderTrack;
+  final VoidCallback onAbout;
   final VoidCallback onCart;
 
   @override
@@ -148,25 +165,55 @@ class _HomeHeader extends StatelessWidget {
                   color: SeeraColors.pinkPop,
                 )
               else
-                IconButton(
-                  tooltip: 'Buka menu',
-                  onPressed: onCatalog,
-                  icon: const Icon(Icons.menu),
-                  color: SeeraColors.ink,
+                PopupMenuButton<String>(
+                  tooltip: 'Navigasi pembeli',
+                  icon: const Icon(Icons.menu, color: SeeraColors.ink),
+                  onSelected: (destination) {
+                    switch (destination) {
+                      case 'catalog':
+                        onCatalog();
+                        break;
+                      case 'reviews':
+                        onReviews();
+                        break;
+                      case 'orders':
+                        onOrderTrack();
+                        break;
+                      case 'about':
+                        onAbout();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'catalog', child: Text('Katalog')),
+                    PopupMenuItem(value: 'reviews', child: Text('Ulasan')),
+                    PopupMenuItem(value: 'orders', child: Text('Cek Pesanan')),
+                    PopupMenuItem(value: 'about', child: Text('Tentang Seera')),
+                  ],
                 ),
               Expanded(
                 child: Align(
                   alignment: isWide ? Alignment.center : Alignment.centerLeft,
                   child: Image.asset(
-                    'assets/images/logo.jpg',
+                    'assets/logo.jpg',
                     height: 38,
                     fit: BoxFit.contain,
                     semanticLabel: 'Logo Seera.co_',
                   ),
                 ),
               ),
-              if (isWide)
+              if (isWide) ...[
                 TextButton(onPressed: onCatalog, child: const Text('KATALOG')),
+                TextButton(onPressed: onReviews, child: const Text('ULASAN')),
+                TextButton(
+                  onPressed: onOrderTrack,
+                  child: const Text('CEK PESANAN'),
+                ),
+                TextButton(
+                  onPressed: onAbout,
+                  child: const Text('TENTANG SEERA'),
+                ),
+              ],
               IconButton(
                 tooltip: 'Keranjang belanja',
                 onPressed: onCart,
@@ -963,7 +1010,7 @@ class _HomeFooter extends StatelessWidget {
       child: Column(
         children: [
           Image.asset(
-            'assets/images/logo.jpg',
+            'assets/logo.jpg',
             height: 42,
             fit: BoxFit.contain,
             semanticLabel: 'Logo Seera.co_',

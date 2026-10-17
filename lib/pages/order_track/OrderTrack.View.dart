@@ -47,7 +47,11 @@ class OrderTrackView extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 if (!orderTrackHasMatch.state) {
-                  return const _LookupError();
+                  return _LookupError(
+                    message:
+                        orderTrackLookupError.state ??
+                        'Kode atau nomor tidak cocok, cek lagi ya.',
+                  );
                 }
                 return const _OrderStatusResult();
               }),
@@ -151,7 +155,10 @@ class _LookupBottomBar extends StatelessWidget {
 }
 
 class _LookupError extends StatelessWidget {
-  const _LookupError();
+  const _LookupError({required this.message});
+
+  final String message;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -161,8 +168,8 @@ class _LookupError extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7A5A5)),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Text(
-        'Kode atau nomor tidak cocok, cek lagi ya.',
+      child: Text(
+        message,
         style: TextStyle(color: Color(0xFF8B1E18), fontWeight: FontWeight.w700),
       ),
     );
