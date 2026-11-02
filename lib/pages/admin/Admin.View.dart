@@ -13,6 +13,7 @@ import '../home/Home.Ctrl.dart';
 import '../payment/Payment.Data.dart';
 import 'Admin.Ctrl.dart';
 import 'Admin.Data.dart';
+import 'Admin.Metrics.dart';
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
@@ -54,7 +55,7 @@ class _AdminViewState extends State<AdminView> {
       case 4:
         return const _StoreSettings();
       default:
-        return const _DashboardUnavailable();
+        return const _DashboardSummary();
     }
   }
 
@@ -563,37 +564,101 @@ class _ReviewAdminCard extends StatelessWidget {
   );
 }
 
-class _DashboardUnavailable extends StatelessWidget {
-  const _DashboardUnavailable();
+class _DashboardSummary extends StatelessWidget {
+  const _DashboardSummary();
 
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      const Text(
-        'Ringkasan toko',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-      ),
-      const SizedBox(height: 14),
-      Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: const [
-          _MetricCard(label: 'Omzet', icon: Icons.payments_outlined),
-          _MetricCard(label: 'Laba', icon: Icons.trending_up),
-          _MetricCard(label: 'Pesanan baru', icon: Icons.shopping_bag_outlined),
-          _MetricCard(label: 'Stok menipis', icon: Icons.inventory_outlined),
+  Widget build(BuildContext context) => OnReactive(() {
+    final isLoading =
+        isAdminProductsLoading.state || isAdminOrdersLoading.state;
+    final error = [
+      adminProductsError.state,
+      adminOrdersError.state,
+    ].whereType<String>().join('\n');
+    final metrics = AdminDashboardMetrics.fromData(
+      products: adminProducts.state,
+      orders: adminOrders.state,
+    );
+    Future<void> refresh() async {
+      await Future.wait([
+        AdminCtrl().refreshProducts(),
+        AdminCtrl().refreshOrders(),
+      ]);
+    }
+
+    return RefreshIndicator(
+      onRefresh: refresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Ringkasan toko',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Muat ulang ringkasan',
+                onPressed: refresh,
+                icon: const Icon(Icons.refresh),
+              ),
+            ],
+          ),
+          if (error.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _AdminError(message: error, onRetry: refresh),
+          ],
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _MetricCard(
+                key: const ValueKey('admin-metric-revenue'),
+                label: 'Omzet',
+                icon: Icons.payments_outlined,
+                value: isLoading ? '—' : _currency(metrics.revenue),
+                hint: isLoading ? 'Memuat data...' : 'Pesanan dibayar',
+              ),
+              _MetricCard(
+                key: const ValueKey('admin-metric-profit'),
+                label: 'Estimasi laba',
+                icon: Icons.trending_up,
+                value: isLoading ? '—' : _currency(metrics.estimatedProfit),
+                hint: isLoading ? 'Memuat data...' : 'Dihitung dari HPP produk',
+              ),
+              _MetricCard(
+                key: const ValueKey('admin-metric-new-orders'),
+                label: 'Pesanan baru',
+                icon: Icons.shopping_bag_outlined,
+                value: isLoading ? '—' : '${metrics.newOrders}',
+                hint: isLoading ? 'Memuat data...' : 'Menunggu pembayaran',
+              ),
+              _MetricCard(
+                key: const ValueKey('admin-metric-low-stock'),
+                label: 'Stok menipis',
+                icon: Icons.inventory_outlined,
+                value: isLoading ? '—' : '${metrics.lowStockProducts}',
+                hint: isLoading
+                    ? 'Memuat data...'
+                    : 'Produk dengan stok ≤ ${AdminDashboardMetrics.lowStockThreshold}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const _UnavailablePanel(
+            title: 'Penjualan lain',
+            details:
+                'Catat penjualan Shopee, TikTok, atau Offline setelah endpoint pencatatannya tersedia.',
+            missing: 'Belum ada endpoint simpan_penjualan_lain.',
+          ),
         ],
       ),
-      const SizedBox(height: 16),
-      const _UnavailablePanel(
-        title: 'Penjualan lain',
-        details:
-            'Catat penjualan Shopee, TikTok, atau Offline setelah endpoint pencatatannya tersedia.',
-        missing: 'Belum ada endpoint simpan_penjualan_lain.',
-      ),
-    ],
-  );
+    );
+  });
 }
 
 class _OrderManagement extends StatelessWidget {
@@ -982,10 +1047,18 @@ class _StoreSettingsState extends State<_StoreSettings> {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.icon});
+  const _MetricCard({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.hint,
+  });
 
   final String label;
   final IconData icon;
+  final String value;
+  final String hint;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -1000,12 +1073,12 @@ class _MetricCard extends StatelessWidget {
             Icon(icon, color: SeeraColors.pinkDeep),
             const SizedBox(height: 12),
             Text(label, style: const TextStyle(color: SeeraColors.greyMauve)),
-            const Text(
-              '—',
+            Text(
+              value,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
             ),
-            const Text(
-              'Menunggu API',
+            Text(
+              hint,
               style: TextStyle(fontSize: 11, color: SeeraColors.greyMauve),
             ),
           ],

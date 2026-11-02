@@ -40,11 +40,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 final _supabaseRequests = <http.Request>[];
 var _returnCustomerReviews = false;
+var _returnAdminDashboardData = false;
 
 void main() {
   setUp(() {
     _supabaseRequests.clear();
     _returnCustomerReviews = false;
+    _returnAdminDashboardData = false;
     loggedInAdmin.state = null;
     SeeraSupabase.setClientForTesting(
       SupabaseClient(
@@ -62,7 +64,9 @@ void main() {
           }
           if (path.endsWith('/Produk')) {
             return http.Response(
-              '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"status_tampil":true}]',
+              _returnAdminDashboardData
+                  ? '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"stok":3,"status_tampil":true},{"kode_produk":"daisy-bracelet","nama_produk":"Pastel Daisy Bracelet","harga_jual":30000,"kategori":"Gelang","deskripsi":"Gelang pastel","hpp_satuan":12000,"stok":14,"status_tampil":true}]'
+                  : '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"status_tampil":true}]',
               200,
               request: request,
             );
@@ -97,6 +101,15 @@ void main() {
               );
             }
             return http.Response('{"id":1}', 200, request: request);
+          }
+          if (path.endsWith('/Penjualan') &&
+              request.method == 'GET' &&
+              _returnAdminDashboardData) {
+            return http.Response(
+              '[{"id_transaksi":42,"nama_customer":"Rani","total_bayar":94127,"status":"Proses","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":2,"harga_saat_ini":45000}]},{"id_transaksi":43,"nama_customer":"Dina","total_bayar":49127,"status":"Menunggu Pembayaran","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":1,"harga_saat_ini":45000}]}]',
+              200,
+              request: request,
+            );
           }
           if (path.endsWith('/Penjualan') &&
               request.method == 'POST' &&
@@ -318,9 +331,47 @@ void main() {
       find.byKey(const ValueKey('admin-password')),
       'secret',
     );
+    _returnAdminDashboardData = true;
     await tester.tap(find.text('Masuk'));
     await tester.pumpAndSettle();
     expect(find.text('Ringkasan toko'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-revenue')),
+        matching: find.text('Rp90.000'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-profit')),
+        matching: find.text('Rp50.000'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-new-orders')),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-low-stock')),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
+    final dashboardOrdersRequest = _supabaseRequests.singleWhere(
+      (request) =>
+          request.url.path.endsWith('/Penjualan') &&
+          request.method == 'GET',
+    );
+    expect(
+      dashboardOrdersRequest.url.queryParameters['select'],
+      contains('harga_saat_ini'),
+    );
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('Produk'));
@@ -464,10 +515,12 @@ void main() {
     final details = jsonDecode(detailRequest.body) as List<dynamic>;
     final orderId = sale['id_transaksi'];
     expect(details.single, {
-      'id': orderId,
+      'id_transaksi': orderId,
       'kode_produk': product.id,
       'jumlah': 2,
+      'harga_saat_ini': product.price,
     });
+    expect(details.single, isNot(contains('id')));
 
     paymentProofFile.state = XFile.fromData(
       Uint8List.fromList(const [1, 2, 3]),

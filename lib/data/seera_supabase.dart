@@ -163,9 +163,10 @@ class SeeraSupabase {
             items
                 .map(
                   (item) => {
-                    'id': orderId,
+                    'id_transaksi': orderId,
                     'kode_produk': item.product.id,
                     'jumlah': item.quantity,
+                    'harga_saat_ini': item.product.price,
                   },
                 )
                 .toList(growable: false),
@@ -319,7 +320,7 @@ class SeeraSupabase {
     final rows = await client
         .from('Penjualan')
         .select(
-          'id_transaksi,tanggal_transaksi,nama_customer,whatsapp,alamat,ongkir,kode_unik,total_bayar,status,bukti_bayar,Detail_Penjualan(kode_produk,jumlah)',
+          'id_transaksi,tanggal_transaksi,nama_customer,whatsapp,alamat,ongkir,kode_unik,total_bayar,status,bukti_bayar,Detail_Penjualan(kode_produk,jumlah,harga_saat_ini)',
         )
         .order('tanggal_transaksi', ascending: false);
     return _maps(rows);
