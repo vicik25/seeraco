@@ -73,8 +73,8 @@ Future<void> _loadProducts() async {
     if (!catalogCategories.contains(selectedCatalogCategory.state)) {
       selectedCatalogCategory.state = 'Semua';
     }
-  } catch (error) {
-    catalogLoadError.state = error.toString();
+  } catch (_) {
+    catalogLoadError.state = 'Produk tidak dapat dimuat. Coba lagi.';
   }
 }
 
@@ -102,8 +102,8 @@ Future<void> _loadReviews() async {
           ),
         )
         .toList(growable: false);
-  } catch (error) {
-    reviewsLoadError.state = error.toString();
+  } catch (_) {
+    reviewsLoadError.state = 'Ulasan tidak dapat dimuat. Coba lagi.';
   }
 }
 

@@ -14,8 +14,8 @@ class CustomerReviewsCtrl {
           .map(ProductReview.fromJson)
           .where((review) => review.comment.trim().isNotEmpty)
           .toList(growable: false);
-    } catch (error) {
-      customerReviewsError.state = error.toString();
+    } catch (_) {
+      customerReviewsError.state = 'Ulasan pelanggan tidak dapat dimuat.';
     } finally {
       isCustomerReviewsLoading.state = false;
     }

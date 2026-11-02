@@ -100,12 +100,14 @@ class CheckoutCtrl {
         );
         paymentOrderCode.state = orderCode.toString();
         nav.to('/payment');
-      } catch (error) {
+      } catch (_) {
         if (!context.mounted) return;
         RM.scaffold.context = context;
         RM.scaffold.showSnackBar(
           SnackBar(
-            content: Text('Pesanan gagal disimpan: $error'),
+            content: const Text(
+              'Pesanan gagal disimpan. Periksa koneksi lalu coba lagi.',
+            ),
             behavior: SnackBarBehavior.fixed,
           ),
         );

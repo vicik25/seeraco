@@ -270,7 +270,13 @@ class _WriteReviewSheetState extends State<_WriteReviewSheet> {
         const SnackBar(content: Text('Ulasan berhasil dikirim. Terima kasih!')),
       );
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) {
+        setState(
+          () => _error = error is FormatException
+              ? error.message
+              : 'Ulasan gagal dikirim. Silakan coba lagi.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

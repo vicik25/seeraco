@@ -84,12 +84,12 @@ class ReviewCtrl {
         );
         await Future<void>.delayed(const Duration(milliseconds: 500));
         nav.to('/order-track');
-      } catch (error) {
+      } catch (_) {
         if (!context.mounted) return;
         RM.scaffold.context = context;
         RM.scaffold.showSnackBar(
           SnackBar(
-            content: Text('Ulasan gagal dikirim: $error'),
+            content: const Text('Ulasan gagal dikirim. Silakan coba lagi.'),
             behavior: SnackBarBehavior.fixed,
           ),
         );

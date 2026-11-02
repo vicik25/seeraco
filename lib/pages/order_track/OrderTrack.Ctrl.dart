@@ -77,8 +77,9 @@ class OrderTrackCtrl {
             orderTrackStatus.state.toLowerCase() == 'selesai';
         savedOrderCode.state = id;
         savedOrderWhatsapp.state = orderTrackExpectedWhatsapp.state;
-      } catch (error) {
-        orderTrackLookupError.state = error.toString();
+      } catch (_) {
+        orderTrackLookupError.state =
+            'Pesanan tidak dapat dimuat. Periksa data dan coba lagi.';
         orderTrackHasMatch.state = false;
       }
       orderTrackHasSearched.state = true;

@@ -91,9 +91,12 @@ class PaymentCtrl {
         _showMessage(context, 'Bukti bayar diterima. Status pesanan: Proses.');
         await Future<void>.delayed(const Duration(milliseconds: 600));
         nav.to('/order-track');
-      } catch (error) {
+      } catch (_) {
         if (context.mounted) {
-          _showMessage(context, 'Bukti bayar gagal dikirim: $error');
+          _showMessage(
+            context,
+            'Bukti bayar gagal dikirim. Periksa koneksi lalu coba lagi.',
+          );
         }
       }
     });

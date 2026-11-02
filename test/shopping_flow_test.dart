@@ -102,7 +102,12 @@ void main() {
               request.method == 'POST' &&
               request.headers['prefer']?.contains('return=representation') ==
                   true) {
-            return http.Response('{"id_transaksi":42}', 201, request: request);
+            final sale = jsonDecode(request.body) as Map<String, dynamic>;
+            return http.Response(
+              jsonEncode({'id_transaksi': sale['id_transaksi']}),
+              201,
+              request: request,
+            );
           }
           if (path.endsWith('/Penjualan') &&
               request.headers['accept'] ==
@@ -446,6 +451,8 @@ void main() {
           request.url.path.endsWith('/Penjualan') && request.method == 'POST',
     );
     final sale = jsonDecode(saleRequest.body) as Map<String, dynamic>;
+    expect(sale['id_transaksi'], isA<int>());
+    expect(sale['id_transaksi'], greaterThan(0));
     expect(sale['nama_customer'], 'Rani Seera');
     expect(sale['whatsapp'], '6281234567890');
     expect(sale['total_bayar'], checkoutTotal);
@@ -455,7 +462,12 @@ void main() {
           request.method == 'POST',
     );
     final details = jsonDecode(detailRequest.body) as List<dynamic>;
-    expect(details.single, {'id': 42, 'kode_produk': product.id, 'jumlah': 2});
+    final orderId = sale['id_transaksi'];
+    expect(details.single, {
+      'id': orderId,
+      'kode_produk': product.id,
+      'jumlah': 2,
+    });
 
     paymentProofFile.state = XFile.fromData(
       Uint8List.fromList(const [1, 2, 3]),
@@ -467,7 +479,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
     expect(find.text('Ringkasan pesanan'), findsOneWidget);
-    expect(find.text('42'), findsWidgets);
+    expect(find.text('$orderId'), findsWidgets);
     expect(find.text('Proses · Bukti bayar diterima'), findsOneWidget);
     expect(find.text('Rp94.127'), findsOneWidget);
     expect(find.text('Jalan Melati 10, Bandung'), findsOneWidget);

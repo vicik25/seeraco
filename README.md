@@ -19,9 +19,11 @@ policies in Supabase before enabling production writes.
 - `Produk`: customer screens query rows with `status_tampil = true`.
   Product data maps `kode_produk`, `nama_produk`, `kategori`, `deskripsi`,
   `harga_jual`, `hpp_satuan`, `penanda`, `gambar`, and `stok`.
-- `Penjualan`: checkout inserts customer/address/contact fields, `ongkir`,
-  `kode_unik`, `total_bayar`, and initial `status`. The returned
-  `id_transaksi` is the order code used by payment and tracking.
+- `Penjualan`: checkout sends a positive integer `id_transaksi` along with
+  customer/address/contact fields, `ongkir`, `kode_unik`, `total_bayar`, and
+  initial `status`. Sending the ID explicitly supports hosted tables where
+  `id_transaksi` has no database default. The returned ID is the order code
+  used by payment and tracking.
 - `Detail_Penjualan`: rows use `id` as the foreign key to `Penjualan.id_transaksi`,
   plus `kode_produk` and `jumlah`.
 - `Review`: reads and writes `id_transaksi`, `nama_customer`, `rating`, and

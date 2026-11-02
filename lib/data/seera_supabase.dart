@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,6 +16,7 @@ class SeeraSupabase {
   static const storageBucket = 'uploads';
 
   static SupabaseClient? _testClient;
+  static final _orderIdRandom = Random.secure();
 
   static SupabaseClient get client => _testClient ?? Supabase.instance.client;
 
@@ -132,9 +135,11 @@ class SeeraSupabase {
     required int total,
     required List<CartItem> items,
   }) async {
+    final transactionId = _orderIdRandom.nextInt(0x7ffffffe) + 1;
     final response = await client
         .from('Penjualan')
         .insert({
+          'id_transaksi': transactionId,
           'nama_customer': customerName,
           'whatsapp': normalizeWhatsapp(whatsapp),
           'email': email,
@@ -147,6 +152,9 @@ class SeeraSupabase {
         .select('id_transaksi')
         .single();
     final orderId = response['id_transaksi'];
+    if (orderId == null) {
+      throw StateError('Server tidak mengembalikan kode pesanan.');
+    }
 
     try {
       await client
