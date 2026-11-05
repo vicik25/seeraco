@@ -74,6 +74,9 @@ class AdminCtrl {
     }
   }
 
+  Future<void> refreshCustomerDetails() =>
+      Future.wait([refreshOrders(), refreshProducts()]);
+
   Future<void> saveProduct({
     required String id,
     required String name,
@@ -81,12 +84,19 @@ class AdminCtrl {
     required String description,
     required String price,
     required String costPrice,
+    required String stock,
     required String marker,
     XFile? image,
   }) async {
     final parsedPrice = int.tryParse(price.trim());
     final parsedCost = int.tryParse(costPrice.trim());
+    final parsedStock = int.tryParse(stock.trim());
     final extension = image?.name.split('.').last.toLowerCase();
+    if (parsedStock == null || parsedStock < 0) {
+      throw const FormatException(
+        'Jumlah stok harus diisi dengan angka bulat 0 atau lebih.',
+      );
+    }
     if (name.trim().isEmpty ||
         category.trim().isEmpty ||
         parsedPrice == null ||
@@ -111,6 +121,7 @@ class AdminCtrl {
       description: description.trim(),
       price: parsedPrice,
       costPrice: parsedCost,
+      stock: parsedStock,
       marker: marker.trim(),
       image: image,
     );
@@ -128,6 +139,7 @@ class AdminCtrl {
   }) async {
     await SeeraSupabase.updateOrderStatus(orderId: orderId, status: status);
     await refreshOrders();
+    if (status == 'Dikirim') await refreshProducts();
   }
 
   Future<void> deleteReview(ProductReview review) async {

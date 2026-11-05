@@ -18,5 +18,5 @@ final checkoutForm = RM.injectForm();
 
 int get checkoutSubtotal => cartSubtotal;
 const checkoutShipping = 4000;
-const checkoutUniqueCode = 127;
+const checkoutUniqueCode = 0;
 int get checkoutTotal => checkoutSubtotal + checkoutShipping + checkoutUniqueCode;

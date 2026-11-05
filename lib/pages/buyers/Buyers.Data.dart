@@ -23,6 +23,14 @@ final seeraBuyers = RM.inject<List<BuyerProfile>>(
   () => const [],
   autoDisposeWhenNotUsed: false,
 );
+final isLoadingSeeraBuyers = RM.inject<bool>(
+  () => false,
+  autoDisposeWhenNotUsed: false,
+);
+final seeraBuyersError = RM.inject<String?>(
+  () => null,
+  autoDisposeWhenNotUsed: false,
+);
 
 final visibleBuyerCount = RM.inject<int>(
   () => 4,

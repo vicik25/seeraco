@@ -13,7 +13,7 @@ class Product {
     this.imageUrl = '',
     this.costPrice = 0,
     this.marker = '',
-    this.stock = 0,
+    this.stock,
   });
 
   final String id;
@@ -27,7 +27,7 @@ class Product {
   final String imageUrl;
   final int costPrice;
   final String marker;
-  final int stock;
+  final int? stock;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
@@ -62,7 +62,7 @@ class Product {
         'cost_price',
       ]),
       marker: _readString(json, const ['penanda', 'label', 'tag']),
-      stock: _readInt(json, const ['stok', 'stock']),
+      stock: _readNullableInt(json, const ['stok', 'stock']),
       rating:
           double.tryParse(_readString(json, const ['rating', 'rata_rating'])) ??
           0,
@@ -106,4 +106,11 @@ int _readInt(Map<String, dynamic> json, List<String> keys) {
     }
   }
   return 0;
+}
+
+int? _readNullableInt(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (json[key] != null) return _readInt(json, [key]);
+  }
+  return null;
 }

@@ -130,6 +130,8 @@ class SeeraSupabase {
     required String whatsapp,
     required String email,
     required String address,
+    required String note,
+    required bool showNameInBuyerList,
     required int shipping,
     required int uniqueCode,
     required int total,
@@ -144,6 +146,8 @@ class SeeraSupabase {
           'whatsapp': normalizeWhatsapp(whatsapp),
           'email': email,
           'alamat': address,
+          'catatan': note,
+          'tampilkan_nama_pembeli': showNameInBuyerList,
           'ongkir': shipping,
           'kode_unik': uniqueCode,
           'total_bayar': total,
@@ -261,6 +265,7 @@ class SeeraSupabase {
     required String description,
     required int price,
     required int costPrice,
+    required int stock,
     required String marker,
     XFile? image,
   }) async {
@@ -273,6 +278,7 @@ class SeeraSupabase {
       'deskripsi': description,
       'harga_jual': price,
       'hpp_satuan': costPrice,
+      'stok': stock,
       'penanda': marker,
       'status_tampil': true,
       'gambar': ?imageUrl,
@@ -320,9 +326,14 @@ class SeeraSupabase {
     final rows = await client
         .from('Penjualan')
         .select(
-          'id_transaksi,tanggal_transaksi,nama_customer,whatsapp,alamat,ongkir,kode_unik,total_bayar,status,bukti_bayar,Detail_Penjualan(kode_produk,jumlah,harga_saat_ini)',
+          'id_transaksi,tanggal_transaksi,nama_customer,whatsapp,email,alamat,catatan,ongkir,kode_unik,total_bayar,status,bukti_bayar,Detail_Penjualan(kode_produk,jumlah,harga_saat_ini)',
         )
         .order('tanggal_transaksi', ascending: false);
+    return _maps(rows);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchCompletedBuyerStories() async {
+    final rows = await client.rpc('public_completed_buyer_stories');
     return _maps(rows);
   }
 

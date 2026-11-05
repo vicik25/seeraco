@@ -20,8 +20,9 @@ policies in Supabase before enabling production writes.
   Product data maps `kode_produk`, `nama_produk`, `kategori`, `deskripsi`,
   `harga_jual`, `hpp_satuan`, `penanda`, `gambar`, and `stok`.
 - `Penjualan`: checkout sends a positive integer `id_transaksi` along with
-  customer/address/contact fields, `ongkir`, `kode_unik`, `total_bayar`, and
-  initial `status`. Sending the ID explicitly supports hosted tables where
+  customer/address/contact fields, `catatan`, the buyer-list name consent,
+  `ongkir`, `kode_unik`, `total_bayar`, and initial `status`. Sending the ID
+  explicitly supports hosted tables where
   `id_transaksi` has no database default. The returned ID is the order code
   used by payment and tracking.
 - `Detail_Penjualan`: rows send `id_transaksi` as the foreign key to
@@ -37,10 +38,15 @@ policies in Supabase before enabling production writes.
   images into the `uploads` Storage bucket. Customer payment reads the same
   row and falls back to the bundled QRIS asset if no URL is configured.
 
-The current database schema does not expose a checkout note, item variant,
-line-item price/subtotal, or order subtotal column. Those values cannot be
-persisted by this client without a matching database migration. The application
-does not fabricate those fields or send unknown columns.
+The database migration
+[`supabase/migrations/20261105000001_order_notes_and_buyer_stories.sql`](./supabase/migrations/20261105000001_order_notes_and_buyer_stories.sql)
+adds checkout notes and an opt-in, privacy-preserving RPC for the public buyer
+showcase. Apply it in Supabase before using the updated checkout, admin order
+details, or completed-buyer list. Item variants and separate line-item/order
+subtotal columns remain unavailable and are not fabricated by the client.
+
+Checkout total is the item subtotal plus shipping. The previous fixed unique
+code is no longer charged; `kode_unik` is stored as zero for new orders.
 
 ## Admin dashboard metrics
 
@@ -48,9 +54,17 @@ The admin summary loads products and orders from Supabase. Revenue sums item
 prices for orders with status `Proses`, `Dikirim`, or `Selesai`; pending and
 failed orders are excluded. Estimated profit uses each order item's
 `harga_saat_ini` and the product's current `hpp_satuan`, so it is an estimate
-if a product's cost changes later. New orders count `Menunggu Pembayaran`;
-low-stock products have 5 or fewer units. Use the dashboard refresh control to
-reload changes made after the page was opened.
+if a product's cost changes later. New orders count `Menunggu Pembayaran`.
+The low-stock count includes products with a configured `stok` of 5 or fewer
+units; products without a stock value are not counted and are listed as
+`Belum diatur`. Total stock sums the configured `stok` values, and the dashboard
+shows each product's stock. Set the initial quantity when adding a product or
+edit it from the product list. To deduct stock automatically when an admin
+changes an order to `Dikirim`, apply
+[`supabase/migrations/20261105000000_decrement_stock_on_shipping.sql`](./supabase/migrations/20261105000000_decrement_stock_on_shipping.sql)
+to the Supabase database. The database trigger deducts the items atomically and
+only once per order; a shipment is rejected if stock is insufficient. Use the
+dashboard refresh control to reload changes made after the page was opened.
 
 ## Storage
 

@@ -352,7 +352,7 @@ class _PaymentAmountCard extends StatelessWidget {
               ],
             ),
             const Text(
-              'Transfer sesuai nominal sampai tiga digit terakhir.',
+              'Transfer sesuai total tagihan yang tertera.',
               style: TextStyle(color: SeeraColors.ink, fontSize: 12),
             ),
             const Padding(
@@ -362,8 +362,6 @@ class _PaymentAmountCard extends StatelessWidget {
             _PaymentCostLine(label: 'Subtotal', amount: checkoutSubtotal),
             const SizedBox(height: 8),
             _PaymentCostLine(label: 'Ongkir', amount: checkoutShipping),
-            const SizedBox(height: 8),
-            _PaymentCostLine(label: 'Kode unik', amount: checkoutUniqueCode),
           ],
         ),
       ),

@@ -22,16 +22,26 @@ class CheckoutView extends StatelessWidget {
         foregroundColor: SeeraColors.pinkDeep,
         title: const Text(
           'Checkout',
-          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: SeeraColors.pinkDeep,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => RM.navigate.back()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => RM.navigate.back(),
+        ),
       ),
       body: Center(
         child: SizedBox(
           width: screenWidth < 1120 ? screenWidth : 1120,
           child: ListView(
             padding: const EdgeInsets.all(24),
-            children: [const OrderProgressStepper(activeStep: 0), const SizedBox(height: 24), const _CheckoutContent()],
+            children: [
+              const OrderProgressStepper(activeStep: 0),
+              const SizedBox(height: 24),
+              const _CheckoutContent(),
+            ],
           ),
         ),
       ),
@@ -44,15 +54,22 @@ class CheckoutView extends StatelessWidget {
             listenTo: checkoutForm,
             onSubmitting: () => ElevatedButton(
               onPressed: null,
-              style: ElevatedButton.styleFrom(backgroundColor: SeeraColors.pinkPop),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SeeraColors.pinkPop,
+              ),
               child: const CircularProgressIndicator(color: Colors.white),
             ),
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: SeeraColors.pinkPop),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SeeraColors.pinkPop,
+              ),
               onPressed: () => _controller.submit(context),
               child: const Text(
                 'Buat Pesanan',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -100,7 +117,11 @@ class _CheckoutForm extends StatelessWidget {
       children: [
         const Text(
           'Data Penerima',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: SeeraColors.ink),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: SeeraColors.ink,
+          ),
         ),
         const SizedBox(height: 16),
         OnReactive(
@@ -109,7 +130,10 @@ class _CheckoutForm extends StatelessWidget {
             initialValue: checkoutName.state,
             onChanged: _CheckoutForm.controller.updateName,
             textCapitalization: TextCapitalization.words,
-            decoration: _inputDecoration('Nama Lengkap', checkoutNameError.state),
+            decoration: _inputDecoration(
+              'Nama Lengkap',
+              checkoutNameError.state,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -119,7 +143,10 @@ class _CheckoutForm extends StatelessWidget {
             initialValue: checkoutWhatsapp.state,
             onChanged: _CheckoutForm.controller.updateWhatsapp,
             keyboardType: TextInputType.phone,
-            decoration: _inputDecoration('Nomor WhatsApp', checkoutWhatsappError.state).copyWith(prefixText: '+62 '),
+            decoration: _inputDecoration(
+              'Nomor WhatsApp',
+              checkoutWhatsappError.state,
+            ).copyWith(prefixText: '+62 '),
           ),
         ),
         const SizedBox(height: 12),
@@ -140,7 +167,10 @@ class _CheckoutForm extends StatelessWidget {
             onChanged: _CheckoutForm.controller.updateAddress,
             textCapitalization: TextCapitalization.sentences,
             maxLines: 3,
-            decoration: _inputDecoration('Alamat Lengkap', checkoutAddressError.state),
+            decoration: _inputDecoration(
+              'Alamat Lengkap',
+              checkoutAddressError.state,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -155,9 +185,18 @@ class _CheckoutForm extends StatelessWidget {
           () => CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            value: checkoutShowName.state,
-            onChanged: (value) => _CheckoutForm.controller.toggleShowName(value ?? false),
-            title: const Text('Tampilkan namaku (disamarkan) di daftar pembeli'),
+            value: checkoutPrivacyAccepted.state,
+            onChanged: (value) =>
+                _CheckoutForm.controller.togglePrivacy(value ?? false),
+            title: const Text('Saya menyetujui Kebijakan Privasi (wajib)'),
+            subtitle: checkoutPrivacyError.state == null
+                ? null
+                : Text(
+                    checkoutPrivacyError.state!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
             dense: true,
           ),
         ),
@@ -165,12 +204,15 @@ class _CheckoutForm extends StatelessWidget {
           () => CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            value: checkoutPrivacyAccepted.state,
-            onChanged: (value) => _CheckoutForm.controller.togglePrivacy(value ?? false),
-            title: const Text('Saya menyetujui Kebijakan Privasi (wajib)'),
-            subtitle: checkoutPrivacyError.state == null
-                ? null
-                : Text(checkoutPrivacyError.state!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            value: checkoutShowName.state,
+            onChanged: (value) =>
+                _CheckoutForm.controller.toggleShowName(value ?? false),
+            title: const Text(
+              'Tampilkan nama samaran dan barang yang dibeli di Pembeli Seera',
+            ),
+            subtitle: const Text(
+              'Alamat, nomor WhatsApp, dan email tidak ditampilkan.',
+            ),
             dense: true,
           ),
         ),
@@ -193,7 +235,11 @@ class _CheckoutSummary extends StatelessWidget {
       children: [
         const Text(
           'Ringkasan Pesanan',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: SeeraColors.ink),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: SeeraColors.ink,
+          ),
         ),
         const SizedBox(height: 16),
         Container(
@@ -228,11 +274,16 @@ class _CheckoutSummary extends StatelessWidget {
                 const Divider(height: 20),
                 _CheckoutCostLine(label: 'Subtotal', amount: checkoutSubtotal),
                 const SizedBox(height: 8),
-                _CheckoutCostLine(label: 'Ongkos kirim', amount: checkoutShipping),
-                const SizedBox(height: 8),
-                _CheckoutCostLine(label: 'Kode unik', amount: checkoutUniqueCode),
+                _CheckoutCostLine(
+                  label: 'Ongkos kirim',
+                  amount: checkoutShipping,
+                ),
                 const Divider(height: 20),
-                _CheckoutCostLine(label: 'Total bayar', amount: checkoutTotal, emphasized: true),
+                _CheckoutCostLine(
+                  label: 'Total bayar',
+                  amount: checkoutTotal,
+                  emphasized: true,
+                ),
                 const SizedBox(height: 12),
                 const Text(
                   'Estimasi tiba 3 sampai 5 hari setelah pembayaran dikonfirmasi.',
@@ -248,7 +299,11 @@ class _CheckoutSummary extends StatelessWidget {
 }
 
 class _CheckoutCostLine extends StatelessWidget {
-  const _CheckoutCostLine({required this.label, required this.amount, this.emphasized = false});
+  const _CheckoutCostLine({
+    required this.label,
+    required this.amount,
+    this.emphasized = false,
+  });
 
   final String label;
   final int amount;
@@ -313,7 +368,10 @@ class _CheckoutNote extends StatelessWidget {
           Icon(icon, color: SeeraColors.pinkDeep, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: const TextStyle(color: SeeraColors.ink, height: 1.4)),
+            child: Text(
+              text,
+              style: const TextStyle(color: SeeraColors.ink, height: 1.4),
+            ),
           ),
         ],
       ),
@@ -332,6 +390,9 @@ InputDecoration _inputDecoration(String label, [String? error]) {
 }
 
 String _formatCheckoutPrice(int amount) {
-  final formatted = amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.');
+  final formatted = amount.toString().replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]}.',
+  );
   return 'Rp$formatted';
 }

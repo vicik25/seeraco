@@ -93,6 +93,8 @@ class CheckoutCtrl {
           whatsapp: checkoutWhatsapp.state,
           email: checkoutEmail.state.trim(),
           address: checkoutAddress.state.trim(),
+          note: checkoutNote.state.trim(),
+          showNameInBuyerList: checkoutShowName.state,
           shipping: checkoutShipping,
           uniqueCode: checkoutUniqueCode,
           total: checkoutTotal,

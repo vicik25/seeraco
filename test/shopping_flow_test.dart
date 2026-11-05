@@ -32,6 +32,7 @@ import 'package:seeraco/pages/about/About.View.dart';
 import 'package:seeraco/pages/admin/Admin.View.dart';
 import 'package:seeraco/pages/customer_reviews/CustomerReviews.View.dart';
 import 'package:seeraco/pages/buyers/Buyers.View.dart';
+import 'package:seeraco/pages/buyers/Buyers.Data.dart';
 import 'package:seeraco/pages/home/Home.View.dart';
 import 'package:seeraco/pages/review/Review.View.dart';
 import 'package:seeraco/pages/review/Review.Data.dart';
@@ -41,12 +42,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 final _supabaseRequests = <http.Request>[];
 var _returnCustomerReviews = false;
 var _returnAdminDashboardData = false;
+var _returnBuyerStories = false;
 
 void main() {
   setUp(() {
     _supabaseRequests.clear();
     _returnCustomerReviews = false;
     _returnAdminDashboardData = false;
+    _returnBuyerStories = false;
     loggedInAdmin.state = null;
     SeeraSupabase.setClientForTesting(
       SupabaseClient(
@@ -92,6 +95,15 @@ void main() {
               request: request,
             );
           }
+          if (path.endsWith('/rpc/public_completed_buyer_stories')) {
+            return http.Response(
+              _returnBuyerStories
+                  ? '[{"display_name":"R*** S***","product_summary":"Butterfly Beads Watch × 2","purchase_date":"2026-11-04T10:00:00Z"}]'
+                  : '[]',
+              200,
+              request: request,
+            );
+          }
           if (path.endsWith('/Pengaturan')) {
             if (request.method == 'GET') {
               return http.Response(
@@ -106,7 +118,7 @@ void main() {
               request.method == 'GET' &&
               _returnAdminDashboardData) {
             return http.Response(
-              '[{"id_transaksi":42,"nama_customer":"Rani","total_bayar":94127,"status":"Proses","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":2,"harga_saat_ini":45000}]},{"id_transaksi":43,"nama_customer":"Dina","total_bayar":49127,"status":"Menunggu Pembayaran","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":1,"harga_saat_ini":45000}]}]',
+              '[{"id_transaksi":42,"nama_customer":"Rani","whatsapp":"6281234567890","email":"rani@example.com","alamat":"Jalan Melati 10, Bandung","catatan":"Tolong kirim setelah jam 5","tanggal_transaksi":"2026-11-04T10:00:00Z","ongkir":4000,"kode_unik":0,"total_bayar":94000,"status":"Proses","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":2,"harga_saat_ini":45000}]},{"id_transaksi":43,"nama_customer":"Dina","whatsapp":"628111111111","email":"dina@example.com","alamat":"Jalan Mawar 5, Jakarta","catatan":"","tanggal_transaksi":"2026-11-03T10:00:00Z","ongkir":4000,"kode_unik":0,"total_bayar":49000,"status":"Menunggu Pembayaran","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":1,"harga_saat_ini":45000}]}]',
               200,
               request: request,
             );
@@ -363,25 +375,72 @@ void main() {
       ),
       findsOneWidget,
     );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-total-stock')),
+        matching: find.text('17'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Stok per produk'), findsOneWidget);
+    expect(find.text('3 unit'), findsOneWidget);
     final dashboardOrdersRequest = _supabaseRequests.singleWhere(
       (request) =>
-          request.url.path.endsWith('/Penjualan') &&
-          request.method == 'GET',
+          request.url.path.endsWith('/Penjualan') && request.method == 'GET',
     );
     expect(
       dashboardOrdersRequest.url.queryParameters['select'],
       contains('harga_saat_ini'),
     );
+    expect(
+      dashboardOrdersRequest.url.queryParameters['select'],
+      contains('alamat'),
+    );
+    expect(
+      dashboardOrdersRequest.url.queryParameters['select'],
+      contains('email'),
+    );
+    expect(
+      dashboardOrdersRequest.url.queryParameters['select'],
+      contains('catatan'),
+    );
     expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(const ValueKey('admin-order-details-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail pesanan pelanggan'), findsOneWidget);
+    expect(find.text('Jalan Melati 10, Bandung'), findsOneWidget);
+    expect(find.text('rani@example.com'), findsOneWidget);
+    expect(find.text('Butterfly Beads Watch'), findsNWidgets(2));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Produk'));
     await tester.pumpAndSettle();
     expect(find.text('Butterfly Beads Watch'), findsOneWidget);
+    expect(find.textContaining('Stok: 3 unit'), findsOneWidget);
+    await tester.tap(find.text('Tambah'));
+    await tester.pumpAndSettle();
+    expect(find.text('Jumlah stok (unit)'), findsOneWidget);
+    await tester.tap(find.text('Batal'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('Pesanan'));
     await tester.pumpAndSettle();
     expect(find.text('Manajemen pesanan'), findsOneWidget);
+    await tester.tap(find.byTooltip('Lihat detail pelanggan dan barang').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Alamat pengiriman'), findsOneWidget);
+    expect(find.text('Jalan Melati 10, Bandung'), findsOneWidget);
+    expect(find.text('Catatan dari pembeli'), findsOneWidget);
+    expect(find.text('Tolong kirim setelah jam 5'), findsOneWidget);
+    expect(find.text('Nama penerima'), findsOneWidget);
+    expect(find.text('Rani'), findsWidgets);
+    expect(find.text('Butterfly Beads Watch'), findsOneWidget);
+    expect(find.text('2 × Rp45.000'), findsOneWidget);
+    await tester.tap(find.text('Tutup'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('Ulasan'));
@@ -435,6 +494,10 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(() {
+      checkoutNote.state = '';
+      checkoutShowName.state = false;
+    });
 
     final product = catalogProducts.state.first;
     cartItems.state = const [];
@@ -472,7 +535,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Data Penerima'), findsOneWidget);
     expect(find.text('Rp90.000'), findsOneWidget);
-    expect(find.text('Rp94.127'), findsOneWidget);
+    expect(find.text('Rp94.000'), findsOneWidget);
+    expect(find.text('Kode unik'), findsNothing);
     expect(tester.takeException(), isNull);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'Rani Seera');
@@ -485,10 +549,16 @@ void main() {
       find.byType(TextFormField).at(3),
       'Jalan Melati 10, Bandung',
     );
+    await tester.enterText(
+      find.byType(TextFormField).at(4),
+      'Tolong kirim setelah jam 5',
+    );
     expect(checkoutName.state, 'Rani Seera');
     expect(checkoutWhatsapp.state, '81234567890');
     expect(checkoutEmail.state, 'rani@example.com');
     expect(checkoutAddress.state, 'Jalan Melati 10, Bandung');
+    expect(checkoutNote.state, 'Tolong kirim setelah jam 5');
+    const CheckoutCtrl().toggleShowName(true);
     const CheckoutCtrl().togglePrivacy(true);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Buat Pesanan'));
@@ -506,6 +576,9 @@ void main() {
     expect(sale['id_transaksi'], greaterThan(0));
     expect(sale['nama_customer'], 'Rani Seera');
     expect(sale['whatsapp'], '6281234567890');
+    expect(sale['catatan'], 'Tolong kirim setelah jam 5');
+    expect(sale['tampilkan_nama_pembeli'], true);
+    expect(sale['kode_unik'], 0);
     expect(sale['total_bayar'], checkoutTotal);
     final detailRequest = _supabaseRequests.singleWhere(
       (request) =>
@@ -534,7 +607,8 @@ void main() {
     expect(find.text('Ringkasan pesanan'), findsOneWidget);
     expect(find.text('$orderId'), findsWidgets);
     expect(find.text('Proses · Bukti bayar diterima'), findsOneWidget);
-    expect(find.text('Rp94.127'), findsOneWidget);
+    expect(find.text('Rp94.000'), findsOneWidget);
+    expect(find.text('Kode unik'), findsNothing);
     expect(find.text('Jalan Melati 10, Bandung'), findsOneWidget);
     expect(reviewProducts.state, [product.name]);
     expect(orderTrackItems.state.single.quantity, 2);
@@ -650,6 +724,31 @@ void main() {
     }
     addTearDown(tester.view.resetPhysicalSize);
   });
+
+  testWidgets(
+    'Pembeli Seera lists completed orders with masked names and items',
+    (tester) async {
+      _returnBuyerStories = true;
+      await tester.pumpWidget(const MaterialApp(home: BuyersView()));
+      await tester.pumpAndSettle();
+
+      expect(seeraBuyersError.state, isNull);
+      expect(
+        _supabaseRequests.map((request) => request.url.path),
+        contains('/rest/v1/rpc/public_completed_buyer_stories'),
+      );
+      expect(seeraBuyers.state, hasLength(1));
+      expect(
+        find.text('R*** S***'),
+        findsOneWidget,
+        reason:
+            'Rendered text: ${tester.widgetList<Text>(find.byType(Text)).map((text) => text.data).toList()}',
+      );
+      expect(find.text('Butterfly Beads Watch × 2'), findsOneWidget);
+      expect(find.text('04/11/2026'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('review ratings can be selected and written interactively', (
     tester,

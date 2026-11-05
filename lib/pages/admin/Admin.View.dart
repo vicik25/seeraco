@@ -310,8 +310,14 @@ class _ProductManagement extends StatelessWidget {
                       ),
                     ),
                     title: Text(product.name),
-                    subtitle: Text(
-                      '${product.category} · ${_currency(product.price)} · HPP ${_currency(product.costPrice)}',
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${product.category} · ${_currency(product.price)} · HPP ${_currency(product.costPrice)}',
+                        ),
+                        Text('Stok: ${_stockText(product.stock)}'),
+                      ],
                     ),
                     trailing: Wrap(
                       spacing: 4,
@@ -352,6 +358,7 @@ class _ProductManagement extends StatelessWidget {
     final hpp = TextEditingController(
       text: product?.costPrice.toString() ?? '',
     );
+    final stock = TextEditingController(text: product?.stock?.toString() ?? '');
     final marker = TextEditingController(text: product?.marker ?? '');
     XFile? image;
     var saving = false;
@@ -378,6 +385,11 @@ class _ProductManagement extends StatelessWidget {
                   ),
                   _AdminField(controller: price, label: 'Harga', numeric: true),
                   _AdminField(controller: hpp, label: 'HPP', numeric: true),
+                  _AdminField(
+                    controller: stock,
+                    label: 'Jumlah stok (unit)',
+                    numeric: true,
+                  ),
                   _AdminField(controller: marker, label: 'Penanda'),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -419,6 +431,7 @@ class _ProductManagement extends StatelessWidget {
                           description: description.text,
                           price: price.text,
                           costPrice: hpp.text,
+                          stock: stock.text,
                           marker: marker.text,
                           image: image,
                         );
@@ -442,6 +455,7 @@ class _ProductManagement extends StatelessWidget {
     description.dispose();
     price.dispose();
     hpp.dispose();
+    stock.dispose();
     marker.dispose();
   }
 
@@ -579,6 +593,9 @@ class _DashboardSummary extends StatelessWidget {
       products: adminProducts.state,
       orders: adminOrders.state,
     );
+    final products = adminProducts.state
+        .map(Product.fromJson)
+        .toList(growable: false);
     Future<void> refresh() async {
       await Future.wait([
         AdminCtrl().refreshProducts(),
@@ -646,7 +663,34 @@ class _DashboardSummary extends StatelessWidget {
                     ? 'Memuat data...'
                     : 'Produk dengan stok ≤ ${AdminDashboardMetrics.lowStockThreshold}',
               ),
+              _MetricCard(
+                key: const ValueKey('admin-metric-total-stock'),
+                label: 'Total stok',
+                icon: Icons.inventory_2_outlined,
+                value: isLoading ? '—' : '${metrics.totalStock}',
+                hint: isLoading
+                    ? 'Memuat data...'
+                    : metrics.productsWithoutStock == 0
+                    ? 'Unit dari seluruh produk'
+                    : '${metrics.productsWithoutStock} produk belum diatur',
+              ),
             ],
+          ),
+          const SizedBox(height: 16),
+          _InventorySummary(products: products),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const ValueKey('admin-order-details-button'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const _OrderDetailsPage(),
+                ),
+              ),
+              icon: const Icon(Icons.local_shipping_outlined),
+              label: const Text('Lihat detail pesanan pelanggan'),
+            ),
           ),
           const SizedBox(height: 16),
           const _UnavailablePanel(
@@ -659,6 +703,166 @@ class _DashboardSummary extends StatelessWidget {
       ),
     );
   });
+}
+
+class _OrderDetailsPage extends StatelessWidget {
+  const _OrderDetailsPage();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Detail pesanan pelanggan')),
+    body: OnReactive(() {
+      if (isAdminOrdersLoading.state) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (adminOrdersError.state != null) {
+        return _AdminError(
+          message: adminOrdersError.state!,
+          onRetry: AdminCtrl().refreshOrders,
+        );
+      }
+      final products = {
+        for (final product in adminProducts.state)
+          product['kode_produk']?.toString(): product,
+      };
+      final orders = adminOrders.state;
+      if (orders.isEmpty) {
+        return const _EmptyAdminState(message: 'Belum ada pesanan pelanggan.');
+      }
+      return RefreshIndicator(
+        onRefresh: AdminCtrl().refreshOrders,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            final orderId = order['id_transaksi'];
+            final details = order['Detail_Penjualan'];
+            final items = details is List
+                ? details.whereType<Map>().toList(growable: false)
+                : const <Map>[];
+            final subtotal = items.fold<int>(
+              0,
+              (sum, item) =>
+                  sum +
+                  _readMoney(item['harga_saat_ini']) *
+                      _readMoney(item['jumlah']),
+            );
+            return Card(
+              color: Colors.white,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pesanan #$orderId',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      '${order['status'] ?? 'Status belum diisi'} · ${_orderDate(order['tanggal_transaksi'])}',
+                      style: const TextStyle(color: SeeraColors.greyMauve),
+                    ),
+                    const Divider(height: 24),
+                    _OrderInfoLine(
+                      label: 'Nama penerima',
+                      value: order['nama_customer']?.toString(),
+                    ),
+                    _OrderInfoLine(
+                      label: 'WhatsApp',
+                      value: order['whatsapp']?.toString(),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Email',
+                      value: order['email']?.toString(),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Alamat pengiriman',
+                      value: order['alamat']?.toString(),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Catatan dari pembeli',
+                      value: order['catatan']?.toString(),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Barang dipesan',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    if (items.isEmpty)
+                      const Text('Detail barang tidak tersedia.')
+                    else
+                      for (final item in items)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  products[item['kode_produk']
+                                              ?.toString()]?['nama_produk']
+                                          ?.toString() ??
+                                      item['kode_produk']?.toString() ??
+                                      'Produk',
+                                ),
+                              ),
+                              Text(
+                                '${_readMoney(item['jumlah'])} × ${_currency(_readMoney(item['harga_saat_ini']))}',
+                              ),
+                            ],
+                          ),
+                        ),
+                    const Divider(height: 24),
+                    _OrderInfoLine(
+                      label: 'Subtotal barang',
+                      value: _currency(subtotal),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Ongkos kirim',
+                      value: _currency(_readMoney(order['ongkir'])),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Kode unik',
+                      value: _currency(_readMoney(order['kode_unik'])),
+                    ),
+                    _OrderInfoLine(
+                      label: 'Total pembayaran',
+                      value: _currency(_readMoney(order['total_bayar'])),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }),
+  );
+}
+
+class _OrderInfoLine extends StatelessWidget {
+  const _OrderInfoLine({required this.label, required this.value});
+
+  final String label;
+  final String? value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: SeeraColors.greyMauve)),
+        SelectableText(value?.trim().isNotEmpty == true ? value! : '—'),
+      ],
+    ),
+  );
 }
 
 class _OrderManagement extends StatelessWidget {
@@ -732,7 +936,14 @@ class _OrderManagement extends StatelessWidget {
               message: 'Belum ada pesanan untuk filter ini.',
             )
           else
-            for (final order in orders) _AdminOrderCard(order: order),
+            for (final order in orders)
+              _AdminOrderCard(
+                order: order,
+                products: {
+                  for (final product in adminProducts.state)
+                    product['kode_produk']?.toString() ?? '': product,
+                },
+              ),
         ],
       ),
     );
@@ -740,9 +951,10 @@ class _OrderManagement extends StatelessWidget {
 }
 
 class _AdminOrderCard extends StatelessWidget {
-  const _AdminOrderCard({required this.order});
+  const _AdminOrderCard({required this.order, required this.products});
 
   final Map<String, dynamic> order;
+  final Map<String, Map<String, dynamic>> products;
 
   @override
   Widget build(BuildContext context) {
@@ -759,10 +971,14 @@ class _AdminOrderCard extends StatelessWidget {
     final itemSummary = details is List
         ? details
               .whereType<Map>()
-              .map(
-                (item) =>
-                    '${item['kode_produk'] ?? 'Produk'} × ${item['jumlah'] ?? 0}',
-              )
+              .map((item) {
+                final productId = item['kode_produk']?.toString();
+                final productName =
+                    products[productId]?['nama_produk']?.toString() ??
+                    productId ??
+                    'Produk';
+                return '$productName × ${item['jumlah'] ?? 0}';
+              })
               .join(', ')
         : '';
     return Card(
@@ -779,6 +995,17 @@ class _AdminOrderCard extends StatelessWidget {
                     'Pesanan #$orderId',
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Lihat detail pelanggan dan barang',
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (context) => _AdminOrderDetailDialog(
+                      order: order,
+                      products: products,
+                    ),
+                  ),
+                  icon: const Icon(Icons.visibility_outlined),
                 ),
                 if (proofUrl.isNotEmpty)
                   const Chip(
@@ -857,6 +1084,120 @@ class _AdminOrderCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AdminOrderDetailDialog extends StatelessWidget {
+  const _AdminOrderDetailDialog({required this.order, required this.products});
+
+  final Map<String, dynamic> order;
+  final Map<String, Map<String, dynamic>> products;
+
+  @override
+  Widget build(BuildContext context) {
+    final details = order['Detail_Penjualan'];
+    final items = details is List
+        ? details.whereType<Map>().toList(growable: false)
+        : const <Map>[];
+    final subtotal = items.fold<int>(
+      0,
+      (sum, item) =>
+          sum + _readMoney(item['harga_saat_ini']) * _readMoney(item['jumlah']),
+    );
+
+    return AlertDialog(
+      title: Text('Detail pesanan #${order['id_transaksi']}'),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _OrderInfoLine(
+                label: 'Status',
+                value: order['status']?.toString(),
+              ),
+              _OrderInfoLine(
+                label: 'Tanggal pesanan',
+                value: _orderDate(order['tanggal_transaksi']),
+              ),
+              _OrderInfoLine(
+                label: 'Nama penerima',
+                value: order['nama_customer']?.toString(),
+              ),
+              _OrderInfoLine(
+                label: 'WhatsApp',
+                value: order['whatsapp']?.toString(),
+              ),
+              _OrderInfoLine(label: 'Email', value: order['email']?.toString()),
+              _OrderInfoLine(
+                label: 'Alamat pengiriman',
+                value: order['alamat']?.toString(),
+              ),
+              _OrderInfoLine(
+                label: 'Catatan dari pembeli',
+                value: order['catatan']?.toString(),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Barang yang dipesan',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              if (items.isEmpty)
+                const Text('Detail barang tidak tersedia.')
+              else
+                for (final item in items)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            products[item['kode_produk']
+                                        ?.toString()]?['nama_produk']
+                                    ?.toString() ??
+                                item['kode_produk']?.toString() ??
+                                'Produk',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_readMoney(item['jumlah'])} × ${_currency(_readMoney(item['harga_saat_ini']))}',
+                        ),
+                      ],
+                    ),
+                  ),
+              const Divider(height: 24),
+              _OrderInfoLine(
+                label: 'Subtotal barang',
+                value: _currency(subtotal),
+              ),
+              _OrderInfoLine(
+                label: 'Ongkos kirim',
+                value: _currency(_readMoney(order['ongkir'])),
+              ),
+              _OrderInfoLine(
+                label: 'Kode unik',
+                value: _currency(_readMoney(order['kode_unik'])),
+              ),
+              _OrderInfoLine(
+                label: 'Total pembayaran',
+                value: _currency(_readMoney(order['total_bayar'])),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Tutup'),
+        ),
+      ],
     );
   }
 }
@@ -1046,6 +1387,49 @@ class _StoreSettingsState extends State<_StoreSettings> {
   });
 }
 
+class _InventorySummary extends StatelessWidget {
+  const _InventorySummary({required this.products});
+
+  final List<Product> products;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    color: Colors.white,
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Stok per produk',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          if (products.isEmpty)
+            const Text(
+              'Belum ada data produk.',
+              style: TextStyle(color: SeeraColors.greyMauve),
+            )
+          else
+            for (var index = 0; index < products.length; index++) ...[
+              if (index > 0) const Divider(height: 1),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(products[index].name),
+                subtitle: Text(products[index].category),
+                trailing: Text(
+                  _stockText(products[index].stock),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+        ],
+      ),
+    ),
+  );
+}
+
 class _MetricCard extends StatelessWidget {
   const _MetricCard({
     super.key,
@@ -1191,6 +1575,19 @@ class _AdminField extends StatelessWidget {
 
 String _currency(int value) =>
     'Rp${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+
+String _stockText(int? stock) => stock == null ? 'Belum diatur' : '$stock unit';
+
+String _orderDate(dynamic value) {
+  final date = DateTime.tryParse(value?.toString() ?? '');
+  if (date == null) return 'Tanggal tidak tersedia';
+  final local = date.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day/$month/${local.year} $hour:$minute';
+}
 
 int _readMoney(dynamic value) {
   if (value is num) return value.round();

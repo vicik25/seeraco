@@ -4,6 +4,8 @@ class AdminDashboardMetrics {
     required this.estimatedProfit,
     required this.newOrders,
     required this.lowStockProducts,
+    required this.totalStock,
+    required this.productsWithoutStock,
   });
 
   static const lowStockThreshold = 5;
@@ -13,6 +15,8 @@ class AdminDashboardMetrics {
   final int estimatedProfit;
   final int newOrders;
   final int lowStockProducts;
+  final int totalStock;
+  final int productsWithoutStock;
 
   factory AdminDashboardMetrics.fromData({
     required List<Map<String, dynamic>> products,
@@ -20,7 +24,8 @@ class AdminDashboardMetrics {
   }) {
     final productCosts = {
       for (final product in products)
-        if (product['kode_produk'] != null) product['kode_produk'].toString(): _readInt(product['hpp_satuan']),
+        if (product['kode_produk'] != null)
+          product['kode_produk'].toString(): _readInt(product['hpp_satuan']),
     };
     var revenue = 0;
     var estimatedProfit = 0;
@@ -41,20 +46,32 @@ class AdminDashboardMetrics {
         if (productId == null || quantity <= 0 || unitPrice < 0) continue;
 
         revenue += unitPrice * quantity;
-        estimatedProfit += (unitPrice - (productCosts[productId] ?? 0)) * quantity;
+        estimatedProfit +=
+            (unitPrice - (productCosts[productId] ?? 0)) * quantity;
       }
     }
 
-    final lowStockProducts = products.where((product) {
-      final stock = product['stok'];
-      return stock != null && _readInt(stock) <= lowStockThreshold;
-    }).length;
+    var lowStockProducts = 0;
+    var totalStock = 0;
+    var productsWithoutStock = 0;
+    for (final product in products) {
+      final stock = product['stok'] ?? product['stock'];
+      if (stock == null) {
+        productsWithoutStock++;
+        continue;
+      }
+      final quantity = _readInt(stock);
+      totalStock += quantity;
+      if (quantity <= lowStockThreshold) lowStockProducts++;
+    }
 
     return AdminDashboardMetrics(
       revenue: revenue,
       estimatedProfit: estimatedProfit,
       newOrders: newOrders,
       lowStockProducts: lowStockProducts,
+      totalStock: totalStock,
+      productsWithoutStock: productsWithoutStock,
     );
   }
 }

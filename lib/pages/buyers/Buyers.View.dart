@@ -5,10 +5,21 @@ import '../../core/theme/seera_colors.dart';
 import 'Buyers.Ctrl.dart';
 import 'Buyers.Data.dart';
 
-class BuyersView extends StatelessWidget {
+class BuyersView extends StatefulWidget {
   const BuyersView({super.key});
 
+  @override
+  State<BuyersView> createState() => _BuyersViewState();
+}
+
+class _BuyersViewState extends State<BuyersView> {
   static const _controller = BuyersCtrl();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +41,12 @@ class BuyersView extends StatelessWidget {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Muat ulang pembeli',
+            onPressed: _controller.refresh,
+            icon: const Icon(Icons.refresh),
+            color: SeeraColors.pinkDeep,
+          ),
           OnFormSubmissionBuilder(
             listenTo: openAboutFromBuyersForm,
             onSubmitting: () => const Padding(
@@ -65,6 +82,33 @@ class BuyersView extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1100),
                     child: OnReactive(() {
+                      if (isLoadingSeeraBuyers.state) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 36),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      if (seeraBuyersError.state != null) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 36),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Data pembeli gagal dimuat: ${seeraBuyersError.state}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: SeeraColors.greyMauve,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _controller.refresh,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Coba lagi'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       final profiles = seeraBuyers.state
                           .take(visibleBuyerCount.state)
                           .toList();
@@ -94,7 +138,7 @@ class BuyersView extends StatelessWidget {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 14,
                                   mainAxisSpacing: 14,
-                                  mainAxisExtent: 186,
+                                  mainAxisExtent: 210,
                                 ),
                             itemBuilder: (context, index) =>
                                 _BuyerCard(profile: profiles[index]),
@@ -183,7 +227,7 @@ class _BuyersBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Cerita pembeli akan ditampilkan setelah data tersedia.',
+                    'Pesanan terbaru yang sudah selesai, dibagikan dengan nama samaran.',
                     style: TextStyle(color: SeeraColors.ink, fontSize: 12),
                   ),
                 ],
@@ -244,7 +288,7 @@ class _BuyerCard extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   profile.productName,
-                  maxLines: 2,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: SeeraColors.pinkDeep,
@@ -255,7 +299,7 @@ class _BuyerCard extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(
-                      Icons.location_on_outlined,
+                      Icons.check_circle_outline,
                       size: 16,
                       color: SeeraColors.greyMauve,
                     ),
