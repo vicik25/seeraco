@@ -4,7 +4,6 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/order_progress_stepper.dart';
 import '../../data/seera_supabase.dart';
-import '../checkout/Checkout.Data.dart';
 import 'Payment.Ctrl.dart';
 import 'Payment.Data.dart';
 
@@ -91,8 +90,6 @@ class _PaymentViewState extends State<PaymentView> {
               const _QrisCard(),
               const SizedBox(height: 14),
               const _ProofUploadCard(),
-              const SizedBox(height: 14),
-              const _KeepOrderCodeNote(),
             ],
           ),
         ),
@@ -144,6 +141,8 @@ class _OrderCreatedCard extends StatelessWidget {
           const SizedBox(height: 5),
           const _CopyOrderCode(),
           const SizedBox(height: 12),
+          const _KeepOrderCodeNote(),
+          const SizedBox(height: 12),
           const _CountdownBadge(),
         ],
       ),
@@ -175,23 +174,23 @@ class _PaymentRecipientCard extends StatelessWidget {
               children: [
                 _RecipientLine(
                   label: 'Nama',
-                  value: checkoutName.state.isEmpty
+                  value: paymentCustomerName.state.isEmpty
                       ? 'Pelanggan Seera'
-                      : checkoutName.state,
+                      : paymentCustomerName.state,
                 ),
                 const SizedBox(height: 10),
                 _RecipientLine(
                   label: 'WhatsApp',
-                  value: checkoutWhatsapp.state.isEmpty
+                  value: paymentCustomerWhatsapp.state.isEmpty
                       ? '+62'
-                      : '+62 ${checkoutWhatsapp.state}',
+                      : '+62 ${paymentCustomerWhatsapp.state}',
                 ),
                 const SizedBox(height: 10),
                 _RecipientLine(
                   label: 'Alamat',
-                  value: checkoutAddress.state.isEmpty
+                  value: paymentCustomerAddress.state.isEmpty
                       ? 'Alamat belum diisi'
-                      : checkoutAddress.state,
+                      : paymentCustomerAddress.state,
                 ),
               ],
             ),
@@ -359,9 +358,15 @@ class _PaymentAmountCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Divider(height: 1, color: SeeraColors.pinkSoft),
             ),
-            _PaymentCostLine(label: 'Subtotal', amount: checkoutSubtotal),
+            _PaymentCostLine(
+              label: 'Subtotal',
+              amount: paymentOrderSubtotal.state,
+            ),
             const SizedBox(height: 8),
-            _PaymentCostLine(label: 'Ongkir', amount: checkoutShipping),
+            _PaymentCostLine(
+              label: 'Ongkir',
+              amount: paymentOrderShipping.state,
+            ),
           ],
         ),
       ),
@@ -614,21 +619,32 @@ class _ProofUploadCard extends StatelessWidget {
 
 class _KeepOrderCodeNote extends StatelessWidget {
   const _KeepOrderCodeNote();
+
   @override
-  Widget build(BuildContext context) {
-    return const Row(
+  Widget build(BuildContext context) => OnReactive(
+    () => Row(
       children: [
-        Icon(Icons.info_outline, color: SeeraColors.pinkDeep, size: 18),
-        SizedBox(width: 8),
+        const Icon(Icons.info_outline, color: SeeraColors.pinkDeep, size: 18),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Simpan kode pesananmu untuk cek status kapan saja.',
-            style: TextStyle(color: SeeraColors.greyMauve, fontSize: 12),
+            'Simpan kode pesanan dan nomor WhatsApp ${paymentCustomerWhatsapp.state}. Keduanya diperlukan untuk cek pesanan.',
+            style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12),
           ),
         ),
+        IconButton(
+          tooltip: 'Salin nomor WhatsApp',
+          onPressed: () => PaymentCtrl().copyText(
+            context,
+            paymentCustomerWhatsapp.state,
+            'Nomor WhatsApp',
+          ),
+          icon: const Icon(Icons.copy_rounded, size: 18),
+          color: SeeraColors.pinkDeep,
+        ),
       ],
-    );
-  }
+    ),
+  );
 }
 
 class _PaymentCard extends StatelessWidget {

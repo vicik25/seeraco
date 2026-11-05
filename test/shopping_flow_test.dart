@@ -566,7 +566,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pesananmu sudah dibuat!'), findsOneWidget);
     expect(find.text('Kirim Bukti Bayar'), findsOneWidget);
-    expect(paymentTotal, checkoutTotal);
+    expect(paymentTotal, 94000);
+    expect(paymentOrderItems.state.single.quantity, 2);
+    expect(paymentCustomerName.state, 'Rani Seera');
+    expect(paymentCustomerWhatsapp.state, '81234567890');
+    expect(paymentCustomerAddress.state, 'Jalan Melati 10, Bandung');
+    expect(cartItems.state, isEmpty);
+    expect(checkoutName.state, isEmpty);
+    expect(checkoutWhatsapp.state, isEmpty);
+    expect(checkoutEmail.state, isEmpty);
+    expect(checkoutAddress.state, isEmpty);
+    expect(checkoutNote.state, isEmpty);
+    expect(checkoutShowName.state, isFalse);
+    expect(checkoutPrivacyAccepted.state, isFalse);
+    expect(
+      find.textContaining(
+        'nomor WhatsApp 81234567890. Keduanya diperlukan untuk cek pesanan.',
+      ),
+      findsOneWidget,
+    );
     final saleRequest = _supabaseRequests.singleWhere(
       (request) =>
           request.url.path.endsWith('/Penjualan') && request.method == 'POST',
@@ -579,7 +597,7 @@ void main() {
     expect(sale['catatan'], 'Tolong kirim setelah jam 5');
     expect(sale['tampilkan_nama_pembeli'], true);
     expect(sale['kode_unik'], 0);
-    expect(sale['total_bayar'], checkoutTotal);
+    expect(sale['total_bayar'], 94000);
     final detailRequest = _supabaseRequests.singleWhere(
       (request) =>
           request.url.path.endsWith('/Detail_Penjualan') &&
@@ -638,6 +656,11 @@ void main() {
     orderTrackCompleted.state = false;
 
     nav.to('/cart');
+    await tester.pumpAndSettle();
+    expect(cartItems.state, isEmpty);
+    cartItems.state = [
+      CartItem(product: product, variant: '', quantity: 2),
+    ];
     await tester.pumpAndSettle();
     const CartCtrl().changeQuantity(cartItems.state.single, 1);
     await tester.pumpAndSettle();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../data/seera_supabase.dart';
+import '../../domains/_models/cart_item.dart';
 import '../../navigator.dart';
 import '../cart/Cart.Data.dart';
 import '../payment/Payment.Data.dart';
@@ -88,19 +89,35 @@ class CheckoutCtrl {
 
     checkoutForm.submit(() async {
       try {
+        final orderItems = List<CartItem>.unmodifiable(cartItems.state);
+        final customerName = checkoutName.state.trim();
+        final customerWhatsapp = checkoutWhatsapp.state;
+        final customerAddress = checkoutAddress.state.trim();
+        final orderSubtotal = checkoutSubtotal;
+        final orderTotal =
+            orderSubtotal + checkoutShipping + checkoutUniqueCode;
         final orderCode = await SeeraSupabase.createOrder(
-          customerName: checkoutName.state.trim(),
-          whatsapp: checkoutWhatsapp.state,
+          customerName: customerName,
+          whatsapp: customerWhatsapp,
           email: checkoutEmail.state.trim(),
-          address: checkoutAddress.state.trim(),
+          address: customerAddress,
           note: checkoutNote.state.trim(),
           showNameInBuyerList: checkoutShowName.state,
           shipping: checkoutShipping,
           uniqueCode: checkoutUniqueCode,
-          total: checkoutTotal,
-          items: cartItems.state,
+          total: orderTotal,
+          items: orderItems,
         );
         paymentOrderCode.state = orderCode.toString();
+        paymentOrderItems.state = orderItems;
+        paymentCustomerName.state = customerName;
+        paymentCustomerWhatsapp.state = customerWhatsapp;
+        paymentCustomerAddress.state = customerAddress;
+        paymentOrderSubtotal.state = orderSubtotal;
+        paymentOrderShipping.state = checkoutShipping;
+        paymentProofFile.state = null;
+        paymentProofSelected.state = false;
+        _resetCheckoutDraft();
         nav.to('/payment');
       } catch (_) {
         if (!context.mounted) return;
@@ -115,5 +132,21 @@ class CheckoutCtrl {
         );
       }
     });
+  }
+
+  void _resetCheckoutDraft() {
+    cartItems.state = const [];
+    checkoutName.state = '';
+    checkoutWhatsapp.state = '';
+    checkoutEmail.state = '';
+    checkoutAddress.state = '';
+    checkoutNote.state = '';
+    checkoutShowName.state = false;
+    checkoutPrivacyAccepted.state = false;
+    checkoutNameError.state = null;
+    checkoutWhatsappError.state = null;
+    checkoutEmailError.state = null;
+    checkoutAddressError.state = null;
+    checkoutPrivacyError.state = null;
   }
 }

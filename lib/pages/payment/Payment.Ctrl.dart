@@ -4,10 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../data/seera_supabase.dart';
-import '../../domains/_models/cart_item.dart';
 import '../../navigator.dart';
-import '../cart/Cart.Data.dart';
-import '../checkout/Checkout.Data.dart';
 import '../order_track/OrderTrack.Data.dart';
 import '../review/Review.Data.dart';
 import 'Payment.Data.dart';
@@ -65,24 +62,22 @@ class PaymentCtrl {
               int.tryParse(paymentOrderCode.state) ?? paymentOrderCode.state,
           file: proof,
         );
-        reviewProducts.state = cartItems.state
+        reviewProducts.state = paymentOrderItems.state
             .map((item) => item.product.name)
             .toList(growable: false);
         reviewRatings.state = List<int>.filled(reviewProducts.state.length, 0);
         reviewText.state = '';
-        orderTrackItems.state = List<CartItem>.unmodifiable(cartItems.state);
-        orderTrackTotal.state = checkoutTotal;
+        orderTrackItems.state = paymentOrderItems.state;
+        orderTrackTotal.state = paymentTotal;
         orderTrackCode.state = paymentOrderCode.state;
-        orderTrackCustomerName.state = checkoutName.state.trim();
+        orderTrackCustomerName.state = paymentCustomerName.state;
         savedOrderCode.state = paymentOrderCode.state;
-        orderTrackWhatsapp.state = checkoutWhatsapp.state;
-        savedOrderWhatsapp.state = checkoutWhatsapp.state;
-        orderTrackAddress.state = checkoutAddress.state;
+        orderTrackWhatsapp.state = paymentCustomerWhatsapp.state;
+        savedOrderWhatsapp.state = paymentCustomerWhatsapp.state;
+        orderTrackAddress.state = paymentCustomerAddress.state;
         orderTrackStatus.state = 'Proses';
-        orderTrackExpectedWhatsapp.state = checkoutWhatsapp.state.replaceAll(
-          RegExp(r'\D'),
-          '',
-        );
+        orderTrackExpectedWhatsapp.state = paymentCustomerWhatsapp.state
+            .replaceAll(RegExp(r'\D'), '');
         orderTrackCompleted.state =
             orderTrackStatus.state.toLowerCase() == 'selesai';
         orderTrackHasMatch.state = true;
