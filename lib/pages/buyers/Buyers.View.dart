@@ -23,165 +23,173 @@ class _BuyersViewState extends State<BuyersView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: SeeraColors.pinkDeep,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
-        title: const Text(
-          'Pembeli Seera',
-          style: TextStyle(
-            color: SeeraColors.pinkDeep,
-            fontWeight: FontWeight.w800,
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
+      ),
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
           ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Muat ulang pembeli',
-            onPressed: _controller.refresh,
-            icon: const Icon(Icons.refresh),
-            color: SeeraColors.pinkDeep,
-          ),
-          OnFormSubmissionBuilder(
-            listenTo: openAboutFromBuyersForm,
-            onSubmitting: () => const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: SeeraColors.pinkDeep,
-                  ),
-                ),
-              ),
+          title: const Text(
+            'Pembeli Seera',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontWeight: FontWeight.w800,
             ),
-            child: IconButton(
-              tooltip: 'Tentang Seera',
-              onPressed: () => _controller.openAbout(context),
-              icon: const Icon(Icons.info_outline),
+          ),
+          actions: [
+            IconButton(
+              tooltip: 'Muat ulang pembeli',
+              onPressed: _controller.refresh,
+              icon: const Icon(Icons.refresh),
               color: SeeraColors.pinkDeep,
             ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const _BuyersBanner(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+            OnFormSubmissionBuilder(
+              listenTo: openAboutFromBuyersForm,
+              onSubmitting: () => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1100),
-                    child: OnReactive(() {
-                      if (isLoadingSeeraBuyers.state) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 36),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      if (seeraBuyersError.state != null) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 36),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Data pembeli gagal dimuat: ${seeraBuyersError.state}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: SeeraColors.greyMauve,
-                                ),
-                              ),
-                              TextButton.icon(
-                                onPressed: _controller.refresh,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Coba lagi'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      final profiles = seeraBuyers.state
-                          .take(visibleBuyerCount.state)
-                          .toList();
-                      if (profiles.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 36),
-                          child: Text(
-                            'Data pembeli belum tersedia.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: SeeraColors.greyMauve),
-                          ),
-                        );
-                      }
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final columns = constraints.maxWidth >= 850
-                              ? 3
-                              : constraints.maxWidth >= 560
-                              ? 2
-                              : 1;
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: profiles.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: columns,
-                                  crossAxisSpacing: 14,
-                                  mainAxisSpacing: 14,
-                                  mainAxisExtent: 210,
-                                ),
-                            itemBuilder: (context, index) =>
-                                _BuyerCard(profile: profiles[index]),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: SeeraColors.pinkDeep,
+                    ),
+                  ),
+                ),
+              ),
+              child: IconButton(
+                tooltip: 'Tentang Seera',
+                onPressed: () => _controller.openAbout(context),
+                icon: const Icon(Icons.info_outline),
+                color: SeeraColors.pinkDeep,
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const _BuyersBanner(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: OnReactive(() {
+                        if (isLoadingSeeraBuyers.state) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 36),
+                            child: Center(child: CircularProgressIndicator()),
                           );
-                        },
-                      );
-                    }),
+                        }
+                        if (seeraBuyersError.state != null) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 36),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Data pembeli gagal dimuat: ${seeraBuyersError.state}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: SeeraColors.greyMauve,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _controller.refresh,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Coba lagi'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        final profiles = seeraBuyers.state
+                            .take(visibleBuyerCount.state)
+                            .toList();
+                        if (profiles.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 36),
+                            child: Text(
+                              'Data pembeli belum tersedia.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: SeeraColors.greyMauve),
+                            ),
+                          );
+                        }
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columns = constraints.maxWidth >= 850
+                                ? 3
+                                : constraints.maxWidth >= 560
+                                ? 2
+                                : 1;
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: profiles.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: columns,
+                                    crossAxisSpacing: 14,
+                                    mainAxisSpacing: 14,
+                                    mainAxisExtent: 184,
+                                  ),
+                              itemBuilder: (context, index) =>
+                                  _BuyerCard(profile: profiles[index]),
+                            );
+                          },
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1100),
-                    child: OnReactive(() {
-                      if (seeraBuyers.state.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      if (visibleBuyerCount.state >= seeraBuyers.state.length) {
-                        return const Center(
-                          child: Text(
-                            'Kamu sudah melihat semua cerita pembeli terbaru.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: SeeraColors.greyMauve),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: OnReactive(() {
+                        if (seeraBuyers.state.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        if (visibleBuyerCount.state >=
+                            seeraBuyers.state.length) {
+                          return const Center(
+                            child: Text(
+                              'Kamu sudah melihat semua cerita pembeli terbaru.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: SeeraColors.greyMauve),
+                            ),
+                          );
+                        }
+                        return Center(
+                          child: OnFormSubmissionBuilder(
+                            listenTo: loadMoreBuyersForm,
+                            onSubmitting: () =>
+                                const _LoadMoreButton(isLoading: true),
+                            child: _LoadMoreButton(
+                              onPressed: _controller.loadMore,
+                            ),
                           ),
                         );
-                      }
-                      return Center(
-                        child: OnFormSubmissionBuilder(
-                          listenTo: loadMoreBuyersForm,
-                          onSubmitting: () =>
-                              const _LoadMoreButton(isLoading: true),
-                          child: _LoadMoreButton(
-                            onPressed: _controller.loadMore,
-                          ),
-                        ),
-                      );
-                    }),
+                      }),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -194,7 +202,13 @@ class _BuyersBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: SeeraColors.pinkLocker,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [SeeraColors.pinkHeroStart, SeeraColors.pinkHeroEnd],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 30),
       child: Center(
         child: ConstrainedBox(
@@ -211,24 +225,22 @@ class _BuyersBanner extends StatelessWidget {
                     'Pembeli Seera',
                     textAlign: compact ? TextAlign.center : TextAlign.start,
                     style: const TextStyle(
-                      color: SeeraColors.ink,
+                      color: Colors.white,
+                      fontFamily: 'Baloo2',
                       fontSize: 30,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     'Terima kasih sudah jadi bagian dari Seera!',
                     textAlign: compact ? TextAlign.center : TextAlign.start,
-                    style: const TextStyle(
-                      color: SeeraColors.ink,
-                      fontSize: 15,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
                   ),
                   const SizedBox(height: 14),
                   const Text(
                     'Pesanan terbaru yang sudah selesai, dibagikan dengan nama samaran.',
-                    style: TextStyle(color: SeeraColors.ink, fontSize: 12),
+                    style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 12),
                   ),
                 ],
               );
@@ -254,7 +266,14 @@ class _BuyerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: SeeraColors.pinkShadow,
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,6 +300,7 @@ class _BuyerCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: SeeraColors.ink,
+                    fontFamily: 'Baloo2',
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),

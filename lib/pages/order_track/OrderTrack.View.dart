@@ -3,6 +3,7 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/order_progress_stepper.dart';
+import '../../core/widgets/seera_pill_button.dart';
 import '../../navigator.dart';
 import '../cart/Cart.Data.dart';
 import '../checkout/Checkout.Data.dart';
@@ -15,52 +16,59 @@ class OrderTrackView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: SeeraColors.pinkSoft,
-        foregroundColor: SeeraColors.ink,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
-        title: const Text(
-          'Cek Pesanan',
-          style: TextStyle(
-            color: SeeraColors.pinkDeep,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
+      ),
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.ink,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
+          ),
+          title: const Text(
+            'Cek Pesanan',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
-      ),
-      body: Center(
-        child: SizedBox(
-          width: screenWidth < 600 ? screenWidth : 600,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const _LookupForm(),
-              const SizedBox(height: 18),
-              OnReactive(() {
-                if (!orderTrackHasSearched.state) {
-                  return const SizedBox.shrink();
-                }
-                if (!orderTrackHasMatch.state) {
-                  return _LookupError(
-                    message:
-                        orderTrackLookupError.state ??
-                        'Kode atau nomor tidak cocok, cek lagi ya.',
-                  );
-                }
-                return const _OrderStatusResult();
-              }),
-            ],
+        body: Center(
+          child: SizedBox(
+            width: screenWidth < 600 ? screenWidth : 600,
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const _LookupForm(),
+                const SizedBox(height: 18),
+                OnReactive(() {
+                  if (!orderTrackHasSearched.state) {
+                    return const SizedBox.shrink();
+                  }
+                  if (!orderTrackHasMatch.state) {
+                    return _LookupError(
+                      message:
+                          orderTrackLookupError.state ??
+                          'Kode atau nomor tidak cocok, cek lagi ya.',
+                    );
+                  }
+                  return const _OrderStatusResult();
+                }),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: _LookupBottomBar(
-        onSubmit: () => OrderTrackCtrl().submit(context),
+        bottomNavigationBar: _LookupBottomBar(
+          onSubmit: () => OrderTrackCtrl().submit(context),
+        ),
       ),
     );
   }
@@ -79,8 +87,9 @@ class _LookupForm extends StatelessWidget {
             'Lacak pesananmu',
             style: TextStyle(
               color: SeeraColors.ink,
+              fontFamily: 'Baloo2',
               fontSize: 20,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 17),
@@ -90,7 +99,17 @@ class _LookupForm extends StatelessWidget {
             textCapitalization: TextCapitalization.characters,
             decoration: const InputDecoration(
               labelText: 'Kode Pesanan',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+                borderSide: BorderSide(color: SeeraColors.pinkSoft, width: 2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+                borderSide: BorderSide(color: SeeraColors.pinkPop, width: 2),
+              ),
             ),
           ),
           const SizedBox(height: 13),
@@ -100,7 +119,17 @@ class _LookupForm extends StatelessWidget {
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(
               labelText: 'Nomor WhatsApp',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+                borderSide: BorderSide(color: SeeraColors.pinkSoft, width: 2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+                borderSide: BorderSide(color: SeeraColors.pinkPop, width: 2),
+              ),
             ),
           ),
         ],
@@ -133,18 +162,10 @@ class _LookupBottomBar extends StatelessWidget {
                 ),
                 child: const CircularProgressIndicator(color: Colors.white),
               ),
-              child: ElevatedButton(
+              child: SeeraPillButton(
+                label: 'Cek Pesanan',
+                icon: Icons.search_rounded,
                 onPressed: onSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SeeraColors.pinkPop,
-                ),
-                child: const Text(
-                  'Cek Pesanan',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
           ),
@@ -166,7 +187,7 @@ class _LookupError extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFEEEE),
         border: Border.all(color: const Color(0xFFE7A5A5)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
         message,
@@ -201,6 +222,7 @@ class _OrderStatusResult extends StatelessWidget {
                   'Ringkasan pesanan',
                   style: TextStyle(
                     color: SeeraColors.ink,
+                    fontFamily: 'Baloo2',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -252,18 +274,18 @@ class _OrderStatusResult extends StatelessWidget {
         const SizedBox(height: 14),
         OnReactive(
           () => orderTrackCompleted.state
-              ? ElevatedButton(
+              ? SeeraPillButton(
+                  label: 'Tulis Ulasan',
+                  icon: Icons.rate_review_outlined,
                   onPressed: () => nav.to('/review'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: SeeraColors.pinkPop,
-                    minimumSize: const Size(0, 50),
-                  ),
-                  child: const Text(
-                    'Tulis Ulasan',
-                    style: TextStyle(color: Colors.white),
-                  ),
                 )
               : const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 12),
+        SeeraPillButton(
+          label: 'Kembali ke Beranda',
+          icon: Icons.home_outlined,
+          onPressed: () => nav.to('/home'),
         ),
       ],
     );
@@ -288,7 +310,7 @@ class _OrderStatusBanner extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           children: [
@@ -373,7 +395,14 @@ class _TrackCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: SeeraColors.pinkShadow,
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: child,
     );

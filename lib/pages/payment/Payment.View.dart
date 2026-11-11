@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
-import '../../core/widgets/order_progress_stepper.dart';
+import '../../core/theme/seera_theme.dart';
+import '../../core/widgets/seera_checkout_step_indicator.dart';
+import '../../core/widgets/seera_pill_button.dart';
 import '../../data/seera_supabase.dart';
 import 'Payment.Ctrl.dart';
 import 'Payment.Data.dart';
@@ -35,67 +37,71 @@ class _PaymentViewState extends State<PaymentView> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: SeeraColors.pinkSoft,
-        foregroundColor: SeeraColors.pinkDeep,
-        title: const Text(
-          'Pembayaran',
-          style: TextStyle(
-            color: SeeraColors.pinkDeep,
-            fontWeight: FontWeight.w800,
+    return Theme(
+      data: buildSeeraTheme().copyWith(
+        textTheme: buildSeeraTheme().textTheme.apply(fontFamily: 'Nunito'),
+      ),
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          title: const Text(
+            'Pembayaran',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
-      ),
-      body: Center(
-        child: SizedBox(
-          width: screenWidth < 600 ? screenWidth : 600,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const OrderProgressStepper(activeStep: 1),
-              const SizedBox(height: 22),
-              const _OrderCreatedCard(),
-              const SizedBox(height: 14),
-              const _PaymentAmountCard(),
-              OnReactive(
-                () => storePaymentSettingsError.state == null
-                    ? const SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: Text(
-                          'Informasi rekening toko belum dapat dimuat.',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+        body: Center(
+          child: SizedBox(
+            width: screenWidth < 600 ? screenWidth : 600,
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const SeeraCheckoutStepIndicator(activeStep: 1),
+                const SizedBox(height: 22),
+                const _OrderCreatedCard(),
+                const SizedBox(height: 14),
+                const _PaymentAmountCard(),
+                OnReactive(
+                  () => storePaymentSettingsError.state == null
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: Text(
+                            'Informasi rekening toko belum dapat dimuat.',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
-                      ),
-              ),
-              const SizedBox(height: 14),
-              const _PaymentRecipientCard(),
-              const SizedBox(height: 14),
-              _BankAccountCard(
-                onCopy: () => _controller.copyText(
-                  context,
-                  currentPaymentAccountNumber,
-                  'Nomor rekening',
                 ),
-              ),
-              const SizedBox(height: 14),
-              const _QrisCard(),
-              const SizedBox(height: 14),
-              const _ProofUploadCard(),
-            ],
+                const SizedBox(height: 14),
+                const _PaymentRecipientCard(),
+                const SizedBox(height: 14),
+                _PaymentMethodCards(
+                  onCopy: () => _controller.copyText(
+                    context,
+                    currentPaymentAccountNumber,
+                    'Nomor rekening',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const _ProofUploadCard(),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: _PaymentBottomBar(
-        onSubmit: () => _controller.submit(context),
+        bottomNavigationBar: _PaymentBottomBar(
+          onSubmit: () => _controller.submit(context),
+        ),
       ),
     );
   }
@@ -123,9 +129,10 @@ class _OrderCreatedCard extends StatelessWidget {
             'Pesananmu sudah dibuat!',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: SeeraColors.ink,
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
               fontSize: 20,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 12),
@@ -163,6 +170,7 @@ class _PaymentRecipientCard extends StatelessWidget {
             'Data penerima',
             style: TextStyle(
               color: SeeraColors.ink,
+              fontFamily: 'Baloo2',
               fontSize: 17,
               fontWeight: FontWeight.w800,
             ),
@@ -307,7 +315,11 @@ class _PaymentAmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _PaymentCard(
-      color: SeeraColors.pinkLocker,
+      gradient: const LinearGradient(
+        colors: [SeeraColors.pinkHeroStart, SeeraColors.pinkHeroEnd],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       child: OnReactive(
         () => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,7 +327,7 @@ class _PaymentAmountCard extends StatelessWidget {
             const Text(
               'TRANSFER TEPAT SEBESAR',
               style: TextStyle(
-                color: SeeraColors.ink,
+                color: Colors.white,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.8,
@@ -331,10 +343,10 @@ class _PaymentAmountCard extends StatelessWidget {
                     child: Text(
                       _formatPaymentAmount(paymentTotal),
                       style: const TextStyle(
-                        color: SeeraColors.ink,
-                        fontFamily: 'monospace',
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontFamily: 'Baloo2',
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -346,26 +358,28 @@ class _PaymentAmountCard extends StatelessWidget {
                     'Nominal pembayaran',
                   ),
                   icon: const Icon(Icons.copy_rounded),
-                  color: SeeraColors.ink,
+                  color: Colors.white,
                 ),
               ],
             ),
             const Text(
               'Transfer sesuai total tagihan yang tertera.',
-              style: TextStyle(color: SeeraColors.ink, fontSize: 12),
+              style: TextStyle(color: Colors.white, fontSize: 12),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: SeeraColors.pinkSoft),
+              child: Divider(height: 1, color: Color(0x66FFFFFF)),
             ),
             _PaymentCostLine(
               label: 'Subtotal',
               amount: paymentOrderSubtotal.state,
+              onGradient: true,
             ),
             const SizedBox(height: 8),
             _PaymentCostLine(
               label: 'Ongkir',
               amount: paymentOrderShipping.state,
+              onGradient: true,
             ),
           ],
         ),
@@ -379,21 +393,27 @@ String _formatPaymentAmount(int amount) {
 }
 
 class _PaymentCostLine extends StatelessWidget {
-  const _PaymentCostLine({required this.label, required this.amount});
+  const _PaymentCostLine({
+    required this.label,
+    required this.amount,
+    this.onGradient = false,
+  });
   final String label;
   final int amount;
+  final bool onGradient;
 
   @override
   Widget build(BuildContext context) {
+    final foreground = onGradient ? Colors.white : SeeraColors.ink;
     return Row(
       children: [
         Expanded(
-          child: Text(label, style: const TextStyle(color: SeeraColors.ink)),
+          child: Text(label, style: TextStyle(color: foreground)),
         ),
         Text(
           'Rp${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
-          style: const TextStyle(
-            color: SeeraColors.ink,
+          style: TextStyle(
+            color: foreground,
             fontFamily: 'monospace',
             fontWeight: FontWeight.w800,
           ),
@@ -404,22 +424,39 @@ class _PaymentCostLine extends StatelessWidget {
 }
 
 class _BankAccountCard extends StatelessWidget {
-  const _BankAccountCard({required this.onCopy});
+  const _BankAccountCard({
+    required this.onCopy,
+    required this.selected,
+    required this.onSelect,
+  });
+
   final VoidCallback onCopy;
+  final bool selected;
+  final VoidCallback onSelect;
 
   @override
   Widget build(BuildContext context) {
     return _PaymentCard(
+      selected: selected,
+      onTap: onSelect,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Transfer Bank',
-            style: TextStyle(
-              color: SeeraColors.ink,
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Transfer Bank',
+                  style: TextStyle(
+                    color: SeeraColors.ink,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (selected)
+                const Icon(Icons.check_circle, color: SeeraColors.pinkPop),
+            ],
           ),
           const SizedBox(height: 12),
           OnReactive(
@@ -496,21 +533,34 @@ class _BankAccountCard extends StatelessWidget {
 }
 
 class _QrisCard extends StatelessWidget {
-  const _QrisCard();
+  const _QrisCard({required this.selected, required this.onSelect});
+
+  final bool selected;
+  final VoidCallback onSelect;
 
   @override
   Widget build(BuildContext context) {
     return _PaymentCard(
+      selected: selected,
+      onTap: onSelect,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Bayar dengan QRIS',
-            style: TextStyle(
-              color: SeeraColors.ink,
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Bayar dengan QRIS',
+                  style: TextStyle(
+                    color: SeeraColors.ink,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (selected)
+                const Icon(Icons.check_circle, color: SeeraColors.pinkPop),
+            ],
           ),
           const SizedBox(height: 12),
           OnReactive(() {
@@ -519,13 +569,13 @@ class _QrisCard extends StatelessWidget {
               child: qrisUrl.isEmpty
                   ? Image.asset(
                       'assets/images/qris.jpeg',
-                      height: 240,
+                      height: 180,
                       fit: BoxFit.contain,
                       semanticLabel: 'Kode QRIS Seera.co_',
                     )
                   : Image.network(
                       qrisUrl,
-                      height: 240,
+                      height: 180,
                       fit: BoxFit.contain,
                       semanticLabel: 'Kode QRIS Seera.co_',
                       errorBuilder: (context, error, stackTrace) =>
@@ -541,6 +591,50 @@ class _QrisCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PaymentMethodCards extends StatefulWidget {
+  const _PaymentMethodCards({required this.onCopy});
+
+  final VoidCallback onCopy;
+
+  @override
+  State<_PaymentMethodCards> createState() => _PaymentMethodCardsState();
+}
+
+class _PaymentMethodCardsState extends State<_PaymentMethodCards> {
+  var _selectedMethod = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bankCard = _BankAccountCard(
+          onCopy: widget.onCopy,
+          selected: _selectedMethod == 0,
+          onSelect: () => setState(() => _selectedMethod = 0),
+        );
+        final qrisCard = _QrisCard(
+          selected: _selectedMethod == 1,
+          onSelect: () => setState(() => _selectedMethod = 1),
+        );
+        final wide = constraints.maxWidth >= 760;
+        if (!wide) {
+          return Column(
+            children: [bankCard, const SizedBox(height: 14), qrisCard],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: bankCard),
+            const SizedBox(width: 14),
+            Expanded(child: qrisCard),
+          ],
+        );
+      },
     );
   }
 }
@@ -567,46 +661,51 @@ class _ProofUploadCard extends StatelessWidget {
             () => InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => PaymentCtrl().selectProof(context),
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 116),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: SeeraColors.pinkPop, width: 2),
-                  borderRadius: BorderRadius.circular(12),
+              child: CustomPaint(
+                painter: _DashedBorderPainter(
+                  color: SeeraColors.pinkPop,
+                  radius: 12,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      paymentProofSelected.state
-                          ? Icons.image_outlined
-                          : Icons.add_photo_alternate_outlined,
-                      color: SeeraColors.pinkDeep,
-                      size: 28,
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      paymentProofSelected.state
-                          ? paymentProofFile.state?.name ?? 'Foto dipilih'
-                          : 'Ketuk untuk pilih foto bukti bayar',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 116),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        paymentProofSelected.state
+                            ? Icons.image_outlined
+                            : Icons.add_photo_alternate_outlined,
                         color: SeeraColors.pinkDeep,
-                        fontWeight: FontWeight.w800,
+                        size: 28,
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      paymentProofSelected.state
-                          ? 'Foto bukti transfer siap dikirim'
-                          : 'JPG atau PNG, maksimal 5 MB',
-                      style: const TextStyle(
-                        color: SeeraColors.greyMauve,
-                        fontSize: 12,
+                      const SizedBox(height: 7),
+                      Text(
+                        paymentProofSelected.state
+                            ? paymentProofFile.state?.name ?? 'Foto dipilih'
+                            : 'Ketuk untuk pilih foto bukti bayar',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: SeeraColors.pinkDeep,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Text(
+                        paymentProofSelected.state
+                            ? 'Foto bukti transfer siap dikirim'
+                            : 'JPG atau PNG, maksimal 5 MB',
+                        style: const TextStyle(
+                          color: SeeraColors.greyMauve,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -648,19 +747,48 @@ class _KeepOrderCodeNote extends StatelessWidget {
 }
 
 class _PaymentCard extends StatelessWidget {
-  const _PaymentCard({required this.child, this.color = Colors.white});
+  const _PaymentCard({
+    required this.child,
+    this.gradient,
+    this.selected = false,
+    this.onTap,
+  });
+
   final Widget child;
-  final Color color;
+  final Gradient? gradient;
+  final bool selected;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: color,
-        border: Border.all(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(26),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(26),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: gradient == null ? Colors.white : null,
+            gradient: gradient,
+            border: Border.all(
+              color: selected ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
+              width: selected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: const [
+              BoxShadow(
+                color: SeeraColors.pinkShadow,
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }
@@ -684,22 +812,15 @@ class _PaymentBottomBar extends StatelessWidget {
               onSubmitting: () => ElevatedButton(
                 onPressed: null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: SeeraColors.pinkPop,
+                  backgroundColor: SeeraColors.pinkDeep,
+                  shape: const StadiumBorder(),
                 ),
                 child: const CircularProgressIndicator(color: Colors.white),
               ),
-              child: ElevatedButton(
+              child: SeeraPillButton(
+                label: 'Kirim Bukti Bayar',
+                icon: Icons.check_circle_outline_rounded,
                 onPressed: onSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SeeraColors.pinkPop,
-                ),
-                child: const Text(
-                  'Kirim Bukti Bayar',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
           ),
@@ -707,4 +828,36 @@ class _PaymentBottomBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final borderPath = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)),
+      );
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    for (final metric in borderPath.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = (distance + 7).clamp(0, metric.length).toDouble();
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += 12;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
+      color != oldDelegate.color || radius != oldDelegate.radius;
 }

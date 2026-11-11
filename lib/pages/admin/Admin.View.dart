@@ -63,60 +63,204 @@ class _AdminViewState extends State<AdminView> {
   Widget build(BuildContext context) => OnReactive(() {
     final signedIn = loggedInAdmin.state != null;
     if (signedIn && !_hasLoadedAdminData) _loadAdminData();
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F4F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Image.asset('assets/logo.jpg', height: 34),
-            const SizedBox(width: 12),
-            const Text(
-              'Panel Admin',
-              style: TextStyle(fontWeight: FontWeight.w800),
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme.apply(fontFamily: 'Nunito');
+    return Theme(
+      data: theme.copyWith(
+        scaffoldBackgroundColor: SeeraColors.adminBackground,
+        textTheme: textTheme.copyWith(
+          titleLarge: textTheme.titleLarge?.copyWith(
+            fontFamily: 'Baloo2',
+            fontWeight: FontWeight.w800,
+          ),
+          headlineSmall: textTheme.headlineSmall?.copyWith(
+            fontFamily: 'Baloo2',
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        appBarTheme: theme.appBarTheme.copyWith(
+          backgroundColor: signedIn ? Colors.transparent : Colors.white,
+          foregroundColor: signedIn ? Colors.white : SeeraColors.primary,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
+        cardTheme: theme.cardTheme.copyWith(
+          color: Colors.white,
+          elevation: 3,
+          shadowColor: SeeraColors.pinkShadow,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+        ),
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: SeeraColors.pinkSoft, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: SeeraColors.pinkSoft, width: 2),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: SeeraColors.pinkPop, width: 2),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: SeeraColors.pinkDeep,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(44, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w800,
             ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: SeeraColors.pinkDeep,
+            minimumSize: const Size(44, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            side: const BorderSide(color: SeeraColors.pinkSoft, width: 1.5),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: SeeraColors.pinkDeep,
+            minimumSize: const Size(44, 44),
+            textStyle: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: IconButton.styleFrom(
+            foregroundColor: SeeraColors.primary,
+            minimumSize: const Size(44, 44),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        dialogTheme: theme.dialogTheme.copyWith(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+        ),
+        navigationBarTheme: theme.navigationBarTheme.copyWith(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          indicatorColor: SeeraColors.pinkDeep,
+          indicatorShape: const StadiumBorder(),
+          iconTheme: WidgetStateProperty.resolveWith(
+            (states) => IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? Colors.white
+                  : SeeraColors.primary,
+            ),
+          ),
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) => TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? Colors.white
+                  : SeeraColors.ink,
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: SeeraColors.adminBackground,
+        appBar: AppBar(
+          flexibleSpace: signedIn
+              ? const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [SeeraColors.primary, SeeraColors.adminDark],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
+                )
+              : null,
+          title: Row(
+            children: [
+              Image.asset('assets/logo.jpg', height: 34),
+              const SizedBox(width: 12),
+              Text(
+                'Panel Admin',
+                style: TextStyle(
+                  color: signedIn ? Colors.white : SeeraColors.primary,
+                  fontFamily: 'Baloo2',
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (signedIn)
+              IconButton(
+                tooltip: 'Keluar dari akun admin',
+                onPressed: _signOut,
+                icon: const Icon(Icons.logout),
+              ),
           ],
         ),
-        actions: [
-          if (signedIn)
-            IconButton(
-              tooltip: 'Keluar dari akun admin',
-              onPressed: _signOut,
-              icon: const Icon(Icons.logout),
-            ),
-        ],
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: signedIn ? _buildSection() : const _AdminSignIn(),
+          ),
+        ),
+        bottomNavigationBar: signedIn
+            ? NavigationBar(
+                selectedIndex: _selectedSection,
+                onDestinationSelected: (index) {
+                  setState(() => _selectedSection = index);
+                },
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    label: 'Ringkasan',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.inventory_2_outlined),
+                    label: 'Produk',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.receipt_long_outlined),
+                    label: 'Pesanan',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.rate_review_outlined),
+                    label: 'Ulasan',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    label: 'Pengaturan',
+                  ),
+                ],
+              )
+            : null,
       ),
-      body: signedIn ? _buildSection() : const _AdminSignIn(),
-      bottomNavigationBar: signedIn
-          ? NavigationBar(
-              selectedIndex: _selectedSection,
-              onDestinationSelected: (index) {
-                setState(() => _selectedSection = index);
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  label: 'Ringkasan',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.inventory_2_outlined),
-                  label: 'Produk',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.receipt_long_outlined),
-                  label: 'Pesanan',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.rate_review_outlined),
-                  label: 'Ulasan',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  label: 'Pengaturan',
-                ),
-              ],
-            )
-          : null,
     );
   });
 }
@@ -194,17 +338,18 @@ class _AdminSignInState extends State<_AdminSignIn> {
               const Text(
                 'Masuk ke Panel Admin',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  fontFamily: 'Baloo2',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 20),
               TextField(
                 key: const ValueKey('admin-username'),
                 controller: _username,
                 autofillHints: const [AutofillHints.username],
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Username'),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -213,10 +358,7 @@ class _AdminSignInState extends State<_AdminSignIn> {
                 obscureText: true,
                 autofillHints: const [AutofillHints.password],
                 onSubmitted: (_) => _signIn(),
-                decoration: const InputDecoration(
-                  labelText: 'Kata sandi',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Kata sandi'),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
@@ -278,7 +420,11 @@ class _ProductManagement extends StatelessWidget {
                 const Expanded(
                   child: Text(
                     'Produk',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 TextButton.icon(
@@ -302,13 +448,18 @@ class _ProductManagement extends StatelessWidget {
                   color: Colors.white,
                   child: ListTile(
                     leading: SizedBox(
-                      width: 48,
-                      height: 48,
+                      width: 56,
+                      height: 56,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(14),
                         child: ProductArtwork(product: product),
                       ),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    minVerticalPadding: 12,
                     title: Text(product.name),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,7 +664,11 @@ class _ReviewManagement extends StatelessWidget {
           children: [
             const Text(
               'Ulasan pelanggan',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                fontFamily: 'Baloo2',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 12),
             if (reviews.isEmpty)
@@ -536,6 +691,7 @@ class _ReviewAdminCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     color: Colors.white,
     child: ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
       title: Text(review.productName.isEmpty ? 'Produk' : review.productName),
       subtitle: Text(
         '${review.customerName} · ${review.rating}/5\n${review.comment}',
@@ -614,7 +770,11 @@ class _DashboardSummary extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Ringkasan toko',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontFamily: 'Baloo2',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               IconButton(
@@ -629,52 +789,66 @@ class _DashboardSummary extends StatelessWidget {
             _AdminError(message: error, onRetry: refresh),
           ],
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _MetricCard(
-                key: const ValueKey('admin-metric-revenue'),
-                label: 'Omzet',
-                icon: Icons.payments_outlined,
-                value: isLoading ? '—' : _currency(metrics.revenue),
-                hint: isLoading ? 'Memuat data...' : 'Pesanan dibayar',
-              ),
-              _MetricCard(
-                key: const ValueKey('admin-metric-profit'),
-                label: 'Estimasi laba',
-                icon: Icons.trending_up,
-                value: isLoading ? '—' : _currency(metrics.estimatedProfit),
-                hint: isLoading ? 'Memuat data...' : 'Dihitung dari HPP produk',
-              ),
-              _MetricCard(
-                key: const ValueKey('admin-metric-new-orders'),
-                label: 'Pesanan baru',
-                icon: Icons.shopping_bag_outlined,
-                value: isLoading ? '—' : '${metrics.newOrders}',
-                hint: isLoading ? 'Memuat data...' : 'Menunggu pembayaran',
-              ),
-              _MetricCard(
-                key: const ValueKey('admin-metric-low-stock'),
-                label: 'Stok menipis',
-                icon: Icons.inventory_outlined,
-                value: isLoading ? '—' : '${metrics.lowStockProducts}',
-                hint: isLoading
-                    ? 'Memuat data...'
-                    : 'Produk dengan stok ≤ ${AdminDashboardMetrics.lowStockThreshold}',
-              ),
-              _MetricCard(
-                key: const ValueKey('admin-metric-total-stock'),
-                label: 'Total stok',
-                icon: Icons.inventory_2_outlined,
-                value: isLoading ? '—' : '${metrics.totalStock}',
-                hint: isLoading
-                    ? 'Memuat data...'
-                    : metrics.productsWithoutStock == 0
-                    ? 'Unit dari seluruh produk'
-                    : '${metrics.productsWithoutStock} produk belum diatur',
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth < 560
+                  ? (constraints.maxWidth - 12) / 2
+                  : 220.0;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _MetricCard(
+                    key: const ValueKey('admin-metric-revenue'),
+                    width: width,
+                    label: 'Omzet',
+                    icon: Icons.payments_outlined,
+                    value: isLoading ? '—' : _currency(metrics.revenue),
+                    hint: isLoading ? 'Memuat data...' : 'Pesanan dibayar',
+                  ),
+                  _MetricCard(
+                    key: const ValueKey('admin-metric-profit'),
+                    width: width,
+                    label: 'Estimasi laba',
+                    icon: Icons.trending_up,
+                    value: isLoading ? '—' : _currency(metrics.estimatedProfit),
+                    hint: isLoading
+                        ? 'Memuat data...'
+                        : 'Dihitung dari HPP produk',
+                  ),
+                  _MetricCard(
+                    key: const ValueKey('admin-metric-new-orders'),
+                    width: width,
+                    label: 'Pesanan baru',
+                    icon: Icons.shopping_bag_outlined,
+                    value: isLoading ? '—' : '${metrics.newOrders}',
+                    hint: isLoading ? 'Memuat data...' : 'Menunggu pembayaran',
+                  ),
+                  _MetricCard(
+                    key: const ValueKey('admin-metric-low-stock'),
+                    width: width,
+                    label: 'Stok menipis',
+                    icon: Icons.inventory_outlined,
+                    value: isLoading ? '—' : '${metrics.lowStockProducts}',
+                    hint: isLoading
+                        ? 'Memuat data...'
+                        : 'Produk dengan stok ≤ ${AdminDashboardMetrics.lowStockThreshold}',
+                  ),
+                  _MetricCard(
+                    key: const ValueKey('admin-metric-total-stock'),
+                    width: width,
+                    label: 'Total stok',
+                    icon: Icons.inventory_2_outlined,
+                    value: isLoading ? '—' : '${metrics.totalStock}',
+                    hint: isLoading
+                        ? 'Memuat data...'
+                        : metrics.productsWithoutStock == 0
+                        ? 'Unit dari seluruh produk'
+                        : '${metrics.productsWithoutStock} produk belum diatur',
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           _InventorySummary(products: products),
@@ -791,7 +965,10 @@ class _OrderDetailsPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     const Text(
                       'Barang dipesan',
-                      style: TextStyle(fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontFamily: 'Baloo2',
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     if (items.isEmpty)
@@ -903,7 +1080,11 @@ class _OrderManagement extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Manajemen pesanan',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontFamily: 'Baloo2',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               IconButton(
@@ -922,8 +1103,25 @@ class _OrderManagement extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(status),
+                      label: Text(
+                        status,
+                        style: TextStyle(
+                          color: selectedStatus == status
+                              ? Colors.white
+                              : SeeraColors.ink,
+                          fontFamily: 'Nunito',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       selected: selectedStatus == status,
+                      selectedColor: SeeraColors.pinkDeep,
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color: selectedStatus == status
+                            ? SeeraColors.pinkDeep
+                            : SeeraColors.pinkSoft,
+                      ),
+                      shape: const StadiumBorder(),
                       onSelected: (_) => adminOrderStatusFilter.state = status,
                     ),
                   ),
@@ -1143,7 +1341,10 @@ class _AdminOrderDetailDialog extends StatelessWidget {
               const SizedBox(height: 12),
               const Text(
                 'Barang yang dipesan',
-                style: TextStyle(fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  fontFamily: 'Baloo2',
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 6),
               if (items.isEmpty)
@@ -1291,7 +1492,11 @@ class _StoreSettingsState extends State<_StoreSettings> {
       children: [
         const Text(
           'Pengaturan toko',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontFamily: 'Baloo2',
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 14),
         if (_isLoading)
@@ -1313,15 +1518,15 @@ class _StoreSettingsState extends State<_StoreSettings> {
                 children: [
                   const Text(
                     'Rekening bank',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _bankName,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama bank',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Nama bank'),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
@@ -1329,7 +1534,6 @@ class _StoreSettingsState extends State<_StoreSettings> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Nomor rekening',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1345,7 +1549,10 @@ class _StoreSettingsState extends State<_StoreSettings> {
                   const SizedBox(height: 22),
                   const Text(
                     'QRIS toko',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Center(
@@ -1402,7 +1609,11 @@ class _InventorySummary extends StatelessWidget {
         children: [
           const Text(
             'Stok per produk',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontFamily: 'Baloo2',
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           if (products.isEmpty)
@@ -1433,12 +1644,14 @@ class _InventorySummary extends StatelessWidget {
 class _MetricCard extends StatelessWidget {
   const _MetricCard({
     super.key,
+    required this.width,
     required this.label,
     required this.icon,
     required this.value,
     required this.hint,
   });
 
+  final double width;
   final String label;
   final IconData icon;
   final String value;
@@ -1446,7 +1659,7 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 220,
+    width: width,
     child: Card(
       color: Colors.white,
       child: Padding(
@@ -1457,9 +1670,13 @@ class _MetricCard extends StatelessWidget {
             Icon(icon, color: SeeraColors.pinkDeep),
             const SizedBox(height: 12),
             Text(label, style: const TextStyle(color: SeeraColors.greyMauve)),
-            Text(
-              value,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              ),
             ),
             Text(
               hint,
@@ -1494,7 +1711,11 @@ class _UnavailablePanel extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontFamily: 'Baloo2',
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 12),
           const Icon(Icons.info_outline, color: SeeraColors.pinkDeep),
@@ -1565,10 +1786,7 @@ class _AdminField extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       keyboardType: numeric ? TextInputType.number : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
+      decoration: InputDecoration(labelText: label),
     ),
   );
 }

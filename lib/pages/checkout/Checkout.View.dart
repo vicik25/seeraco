@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
-import '../../core/widgets/order_progress_stepper.dart';
+import '../../core/widgets/seera_checkout_step_indicator.dart';
+import '../../core/widgets/seera_pill_button.dart';
 import '../cart/Cart.Data.dart';
 import 'Checkout.Ctrl.dart';
 import 'Checkout.Data.dart';
@@ -15,61 +16,63 @@ class CheckoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: SeeraColors.pinkSoft,
-        foregroundColor: SeeraColors.pinkDeep,
-        title: const Text(
-          'Checkout',
-          style: TextStyle(
-            color: SeeraColors.pinkDeep,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
       ),
-      body: Center(
-        child: SizedBox(
-          width: screenWidth < 1120 ? screenWidth : 1120,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const OrderProgressStepper(activeStep: 0),
-              const SizedBox(height: 24),
-              const _CheckoutContent(),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        color: Colors.white,
-        child: SizedBox(
-          height: 50,
-          child: OnFormSubmissionBuilder(
-            listenTo: checkoutForm,
-            onSubmitting: () => ElevatedButton(
-              onPressed: null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SeeraColors.pinkPop,
-              ),
-              child: const CircularProgressIndicator(color: Colors.white),
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          title: const Text(
+            'Checkout',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontWeight: FontWeight.w800,
             ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SeeraColors.pinkPop,
-              ),
-              onPressed: () => _controller.submit(context),
-              child: const Text(
-                'Buat Pesanan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
+          ),
+        ),
+        body: Center(
+          child: SizedBox(
+            width: screenWidth < 1120 ? screenWidth : 1120,
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const SeeraCheckoutStepIndicator(activeStep: 0),
+                const SizedBox(height: 24),
+                const _CheckoutContent(),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: SizedBox(
+            height: 50,
+            child: OnFormSubmissionBuilder(
+              listenTo: checkoutForm,
+              onSubmitting: () => ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SeeraColors.pinkDeep,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(44, 48),
+                  shape: const StadiumBorder(),
                 ),
+                child: const CircularProgressIndicator(color: Colors.white),
+              ),
+              child: SeeraPillButton(
+                label: 'Buat Pesanan',
+                icon: Icons.lock_outline_rounded,
+                onPressed: () => _controller.submit(context),
               ),
             ),
           ),
@@ -87,12 +90,12 @@ class _CheckoutContent extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final form = const _CheckoutForm();
-        final summary = const _CheckoutSummary();
+        const summary = _CheckoutSummary();
         if (constraints.maxWidth >= 920) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: form),
+              Expanded(child: _CheckoutPanel(child: form)),
               const SizedBox(width: 24),
               Expanded(child: summary),
             ],
@@ -100,11 +103,41 @@ class _CheckoutContent extends StatelessWidget {
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [form, const SizedBox(height: 24), summary],
+          children: [
+            _CheckoutPanel(child: form),
+            const SizedBox(height: 24),
+            summary,
+          ],
         );
       },
     );
   }
+}
+
+class _CheckoutPanel extends StatelessWidget {
+  const _CheckoutPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(26),
+      boxShadow: const [
+        BoxShadow(
+          color: SeeraColors.pinkShadow,
+          blurRadius: 16,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(26),
+      child: Padding(padding: const EdgeInsets.all(22), child: child),
+    ),
+  );
 }
 
 class _CheckoutForm extends StatelessWidget {
@@ -237,17 +270,24 @@ class _CheckoutSummary extends StatelessWidget {
           'Ringkasan Pesanan',
           style: TextStyle(
             fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontFamily: 'Baloo2',
+            fontWeight: FontWeight.w800,
             color: SeeraColors.ink,
           ),
         ),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: SeeraColors.pinkSoft),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: const [
+              BoxShadow(
+                color: SeeraColors.pinkShadow,
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           child: OnReactive(() {
             final items = cartItems.state;
@@ -314,6 +354,7 @@ class _CheckoutCostLine extends StatelessWidget {
     final style = TextStyle(
       color: emphasized ? SeeraColors.pinkDeep : SeeraColors.ink,
       fontWeight: emphasized ? FontWeight.w800 : FontWeight.normal,
+      fontFamily: emphasized ? 'Baloo2' : null,
     );
     return Row(
       children: [
@@ -359,8 +400,8 @@ class _CheckoutNote extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: SeeraColors.creamPaper,
-        border: Border.all(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: SeeraColors.yellow),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,7 +426,27 @@ InputDecoration _inputDecoration(String label, [String? error]) {
     errorText: error,
     filled: true,
     fillColor: Colors.white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: SeeraColors.pinkSoft),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: SeeraColors.pinkSoft),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: SeeraColors.pinkPop, width: 2),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide(color: Colors.red.shade700),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+    ),
   );
 }
 

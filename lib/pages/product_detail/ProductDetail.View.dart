@@ -3,6 +3,8 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 
 import '../../core/theme/seera_colors.dart';
 import '../../core/widgets/product_artwork.dart';
+import '../../core/widgets/seera_pill_button.dart';
+import '../../core/widgets/seera_section_title.dart';
 import '../../domains/_models/product.dart';
 import '../../navigator.dart';
 import '../catalog/Catalog.Data.dart';
@@ -18,59 +20,68 @@ class ProductDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     loadStoreData();
     final screenWidth = MediaQuery.sizeOf(context).width;
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: SeeraColors.pinkSoft,
-        foregroundColor: SeeraColors.pinkDeep,
-        title: const Text(
-          'Detail Produk',
-          style: TextStyle(
-            color: SeeraColors.pinkDeep,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Keranjang belanja',
-            onPressed: () => nav.to('/cart'),
-            icon: const Icon(Icons.shopping_bag_outlined),
-          ),
-        ],
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
       ),
-      body: Center(
-        child: SizedBox(
-          width: screenWidth < 1120 ? screenWidth : 1120,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              OnReactive(() {
-                final product = selectedProduct.state;
-                if (product == null) return const _MissingProduct();
-                return Column(
-                  children: [
-                    _ProductDetails(product: product),
-                    _ProductReviews(product: product),
-                  ],
-                );
-              }),
-            ],
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          title: const Text(
+            'Detail Produk',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontWeight: FontWeight.w800,
+            ),
           ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
+          ),
+          actions: [
+            IconButton(
+              tooltip: 'Keranjang belanja',
+              onPressed: () => nav.to('/cart'),
+              icon: const Icon(Icons.shopping_bag_outlined),
+            ),
+          ],
         ),
+        body: ListView(
+          children: [
+            Center(
+              child: SizedBox(
+                width: screenWidth < 1240 ? screenWidth : 1240,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: OnReactive(() {
+                    final product = selectedProduct.state;
+                    if (product == null) return const _MissingProduct();
+                    return Column(
+                      children: [
+                        _ProductDetails(product: product),
+                        _ProductReviews(product: product),
+                      ],
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: OnReactive(() {
+          final product = selectedProduct.state;
+          if (product == null) return const SizedBox.shrink();
+          return _DetailActions(
+            product: product,
+            onAdd: () => _controller.addToCart(context),
+            onBuy: () => _controller.buyNow(context),
+          );
+        }),
       ),
-      bottomNavigationBar: OnReactive(() {
-        final product = selectedProduct.state;
-        if (product == null) return const SizedBox.shrink();
-        return _DetailActions(
-          product: product,
-          onAdd: () => _controller.addToCart(context),
-          onBuy: () => _controller.buyNow(context),
-        );
-      }),
     );
   }
 }
@@ -88,31 +99,33 @@ class _ProductDetails extends StatelessWidget {
         final image = _ProductGallery(product: product);
         final details = _ProductInformation(product: product);
 
-        if (wide) {
-          return Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: Row(
+        return Container(
+          margin: EdgeInsets.all(wide ? 24 : 8),
+          padding: EdgeInsets.all(wide ? 28 : 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
+              BoxShadow(
+                color: SeeraColors.pinkShadow,
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: wide
+              ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: image),
-                    const SizedBox(width: 36),
-                    Expanded(child: details),
+                    Expanded(flex: 6, child: image),
+                    const SizedBox(width: 32),
+                    Expanded(flex: 5, child: details),
                   ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [image, const SizedBox(height: 22), details],
                 ),
-              ),
-            ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [image, const SizedBox(height: 24), details],
-          ),
         );
       },
     );
@@ -129,37 +142,21 @@ class _ProductGallery extends StatelessWidget {
     return Column(
       children: [
         Container(
-          height: 340,
+          height: MediaQuery.sizeOf(context).width < 760 ? 280 : 430,
           decoration: BoxDecoration(
-            color: SeeraColors.pinkSoft,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: SeeraColors.pinkSoft, width: 2),
+            color: SeeraColors.pinkMist,
+            border: Border.all(color: Colors.white, width: 8),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
+              BoxShadow(
+                color: SeeraColors.pinkShadow,
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: ProductArtwork(product: product, large: true),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 76,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: 3,
-            separatorBuilder: (context, index) => const SizedBox(width: 8),
-            itemBuilder: (context, index) => Container(
-              width: 76,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(
-                  color: index == 0
-                      ? SeeraColors.pinkPop
-                      : SeeraColors.pinkSoft,
-                  width: index == 0 ? 2 : 1,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ProductArtwork(product: product),
-            ),
-          ),
         ),
       ],
     );
@@ -185,12 +182,9 @@ class _ProductReviews extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Ulasan pelanggan',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: SeeraColors.ink,
-                fontWeight: FontWeight.w800,
-              ),
+            const SeeraSectionTitle(
+              title: 'Ulasan pelanggan',
+              eyebrow: 'Cerita pelanggan',
             ),
             const SizedBox(height: 12),
             if (isReviewsLoading.state)
@@ -209,8 +203,19 @@ class _ProductReviews extends StatelessWidget {
               )
             else
               for (final review in reviews)
-                Card(
-                  color: Colors.white,
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: SeeraColors.pinkShadow,
+                        blurRadius: 12,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Column(
@@ -271,7 +276,7 @@ class _ProductInformation extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             color: SeeraColors.pinkSoft,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -290,7 +295,8 @@ class _ProductInformation extends StatelessWidget {
           product.name,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: SeeraColors.ink,
-            fontWeight: FontWeight.w900,
+            fontFamily: 'Baloo2',
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
@@ -298,9 +304,11 @@ class _ProductInformation extends StatelessWidget {
           children: [
             const Icon(Icons.star, color: Color(0xFFE5A700), size: 19),
             const SizedBox(width: 4),
-            Text(
-              '${product.rating} (${product.reviewCount} ulasan)',
-              style: const TextStyle(color: SeeraColors.greyMauve),
+            Expanded(
+              child: Text(
+                '${product.rating} (${product.reviewCount} ulasan)',
+                style: const TextStyle(color: SeeraColors.greyMauve),
+              ),
             ),
           ],
         ),
@@ -309,9 +317,9 @@ class _ProductInformation extends StatelessWidget {
           _formatPrice(product.price),
           style: const TextStyle(
             color: SeeraColors.pinkDeep,
-            fontFamily: 'monospace',
+            fontFamily: 'Baloo2',
             fontWeight: FontWeight.w800,
-            fontSize: 26,
+            fontSize: 32,
           ),
         ),
         const SizedBox(height: 12),
@@ -373,6 +381,8 @@ class _VariantPicker extends StatelessWidget {
               onSelected: (_) => controller.selectVariant(variant),
               selectedColor: SeeraColors.pinkSoft,
               backgroundColor: Colors.white,
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+              shape: const StadiumBorder(),
               avatar: CircleAvatar(
                 backgroundColor: colors[variant] ?? SeeraColors.pinkPop,
               ),
@@ -401,10 +411,11 @@ class _QuantitySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return OnReactive(
       () => Container(
+        constraints: const BoxConstraints(minHeight: 48),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: SeeraColors.pinkSoft),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -449,7 +460,7 @@ class _PreOrderNote extends StatelessWidget {
       decoration: BoxDecoration(
         color: SeeraColors.creamPaper,
         border: Border.all(color: SeeraColors.pinkSoft, width: 2),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,38 +499,44 @@ class _DetailActions extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: SizedBox(
-            height: 48,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onAdd,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: SeeraColors.pinkDeep,
-                          side: const BorderSide(color: SeeraColors.pinkPop),
-                          minimumSize: const Size(0, 48),
-                        ),
-                        child: const Text('Tambah ke Keranjang'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: onBuy,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: SeeraColors.pinkDeep,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 48),
-                        ),
-                        child: const Text('Beli Sekarang'),
-                      ),
-                    ),
-                  ],
-                ),
+          child: Align(
+            alignment: Alignment.center,
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 440;
+                  final addButton = SeeraPillButton(
+                    label: 'Tambah ke Keranjang',
+                    icon: Icons.shopping_bag_outlined,
+                    outlined: true,
+                    onPressed: onAdd,
+                  );
+                  final buyButton = SeeraPillButton(
+                    label: 'Beli Sekarang',
+                    icon: Icons.favorite_border_rounded,
+                    onPressed: onBuy,
+                  );
+                  if (compact) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        addButton,
+                        const SizedBox(height: 8),
+                        buyButton,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: addButton),
+                      const SizedBox(width: 10),
+                      Expanded(child: buyButton),
+                    ],
+                  );
+                },
               ),
             ),
           ),

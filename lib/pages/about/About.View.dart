@@ -14,60 +14,73 @@ class AboutView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SeeraColors.pinkMist,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: SeeraColors.pinkDeep,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => RM.navigate.back(),
-        ),
-        title: const Text(
-          'Tentang Seera',
-          style: TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
-        ),
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(18),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 900;
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (wide)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _StoryNote()),
-                            const SizedBox(width: 22),
-                            const SizedBox(width: 330, child: _Polaroid()),
-                          ],
-                        )
-                      else ...[
-                        _StoryNote(),
-                        const SizedBox(height: 18),
-                        const _Polaroid(),
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => RM.navigate.back(),
+          ),
+          title: const Text(
+            'Tentang Seera',
+            style: TextStyle(
+              color: SeeraColors.pinkDeep,
+              fontFamily: 'Baloo2',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth >= 900;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (wide)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: _StoryNote()),
+                              const SizedBox(width: 22),
+                              const SizedBox(width: 330, child: _Polaroid()),
+                            ],
+                          )
+                        else ...[
+                          _StoryNote(),
+                          const SizedBox(height: 18),
+                          const _Polaroid(),
+                        ],
+                        const SizedBox(height: 22),
+                        const _ValuesSection(),
+                        const SizedBox(height: 22),
+                        _SocialSection(
+                          onChannelTap: (channel, handle) =>
+                              _controller.showChannel(context, channel, handle),
+                        ),
+                        const SizedBox(height: 22),
+                        _PolicySection(
+                          onBuyers: () => _controller.openBuyers(context),
+                        ),
                       ],
-                      const SizedBox(height: 22),
-                      const _ValuesSection(),
-                      const SizedBox(height: 22),
-                      _SocialSection(
-                        onChannelTap: (channel, handle) => _controller.showChannel(context, channel, handle),
-                      ),
-                      const SizedBox(height: 22),
-                      _PolicySection(onBuyers: () => _controller.openBuyers(context)),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -82,9 +95,15 @@ class _StoryNote extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: SeeraColors.creamPaper,
-        border: Border.all(color: const Color(0xFFE9D987)),
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: const [BoxShadow(color: Color(0x18000000), blurRadius: 10, offset: Offset(0, 4))],
+        border: Border.all(color: SeeraColors.yellow),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,10 +128,23 @@ class _StoryNote extends StatelessWidget {
           const SizedBox(height: 16),
           const Text(
             'Aksesori ceria, dirangkai dengan hati.',
-            style: TextStyle(color: SeeraColors.ink, fontSize: 25, height: 1.15, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              color: SeeraColors.ink,
+              fontFamily: 'Baloo2',
+              fontSize: 25,
+              height: 1.15,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 12),
-          Text(aboutStory, style: const TextStyle(color: SeeraColors.ink, fontSize: 14, height: 1.65)),
+          Text(
+            aboutStory,
+            style: const TextStyle(
+              color: SeeraColors.ink,
+              fontSize: 14,
+              height: 1.65,
+            ),
+          ),
         ],
       ),
     );
@@ -193,17 +225,27 @@ class _ValuesSection extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border.all(color: SeeraColors.pinkSoft),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         value.$1,
-                        style: const TextStyle(color: SeeraColors.pinkDeep, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                          color: SeeraColors.pinkDeep,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 7),
-                      Text(value.$2, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12, height: 1.4)),
+                      Text(
+                        value.$2,
+                        style: const TextStyle(
+                          color: SeeraColors.greyMauve,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -223,14 +265,24 @@ class _SocialSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const icons = [Icons.camera_alt_outlined, Icons.play_circle_outline, Icons.storefront_outlined];
+    const icons = [
+      Icons.camera_alt_outlined,
+      Icons.play_circle_outline,
+      Icons.storefront_outlined,
+    ];
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: SeeraColors.pinkSoft, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: SeeraColors.pinkSoft,
+        borderRadius: BorderRadius.circular(24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeading(title: 'Temukan Seera', subtitle: 'Ikuti kabar koleksi dan cerita terbaru kami.'),
+          const _SectionHeading(
+            title: 'Temukan Seera',
+            subtitle: 'Ikuti kabar koleksi dan cerita terbaru kami.',
+          ),
           const SizedBox(height: 12),
           OnFormSubmissionBuilder(
             listenTo: aboutSocialActionForm,
@@ -239,7 +291,10 @@ class _SocialSection extends StatelessWidget {
                 SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: SeeraColors.pinkDeep),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: SeeraColors.pinkDeep,
+                  ),
                 ),
                 SizedBox(width: 10),
                 Text('Membuka kanal Seera...'),
@@ -251,11 +306,20 @@ class _SocialSection extends StatelessWidget {
               children: [
                 for (var index = 0; index < aboutSocialChannels.length; index++)
                   ActionChip(
-                    avatar: Icon(icons[index], size: 18, color: SeeraColors.pinkDeep),
-                    label: Text('${aboutSocialChannels[index].$1} · ${aboutSocialChannels[index].$2}'),
+                    avatar: Icon(
+                      icons[index],
+                      size: 18,
+                      color: SeeraColors.pinkDeep,
+                    ),
+                    label: Text(
+                      '${aboutSocialChannels[index].$1} · ${aboutSocialChannels[index].$2}',
+                    ),
                     backgroundColor: Colors.white,
                     side: BorderSide.none,
-                    onPressed: () => onChannelTap(aboutSocialChannels[index].$1, aboutSocialChannels[index].$2),
+                    onPressed: () => onChannelTap(
+                      aboutSocialChannels[index].$1,
+                      aboutSocialChannels[index].$2,
+                    ),
                   ),
               ],
             ),
@@ -278,7 +342,8 @@ class _PolicySection extends StatelessWidget {
       children: [
         const _SectionHeading(
           title: 'Kebijakan Privasi & Syarat',
-          subtitle: 'Informasi yang jelas untuk pengalaman belanja yang nyaman.',
+          subtitle:
+              'Informasi yang jelas untuk pengalaman belanja yang nyaman.',
         ),
         const SizedBox(height: 12),
         OnReactive(
@@ -300,7 +365,10 @@ class _PolicySection extends StatelessWidget {
               icon: SizedBox(
                 width: 17,
                 height: 17,
-                child: CircularProgressIndicator(strokeWidth: 2, color: SeeraColors.pinkDeep),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: SeeraColors.pinkDeep,
+                ),
               ),
               label: Text('Membuka halaman pembeli'),
             ),
@@ -308,7 +376,9 @@ class _PolicySection extends StatelessWidget {
               onPressed: onBuyers,
               icon: const Icon(Icons.people_outline),
               label: const Text('Lihat Pembeli Seera'),
-              style: TextButton.styleFrom(foregroundColor: SeeraColors.pinkDeep),
+              style: TextButton.styleFrom(
+                foregroundColor: SeeraColors.pinkDeep,
+              ),
             ),
           ),
         ),
@@ -328,7 +398,7 @@ class _PolicyTile extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         side: const BorderSide(color: SeeraColors.pinkSoft),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
@@ -336,12 +406,24 @@ class _PolicyTile extends StatelessWidget {
         collapsedIconColor: SeeraColors.greyMauve,
         title: Text(
           section.title,
-          style: const TextStyle(color: SeeraColors.ink, fontSize: 14, fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            color: SeeraColors.ink,
+            fontFamily: 'Baloo2',
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(section.body, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 13, height: 1.55)),
+          Text(
+            section.body,
+            style: const TextStyle(
+              color: SeeraColors.greyMauve,
+              fontSize: 13,
+              height: 1.55,
+            ),
+          ),
         ],
       ),
     );
@@ -361,10 +443,18 @@ class _SectionHeading extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(color: SeeraColors.ink, fontSize: 19, fontWeight: FontWeight.w900),
+          style: const TextStyle(
+            color: SeeraColors.ink,
+            fontFamily: 'Baloo2',
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 3),
-        Text(subtitle, style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12)),
+        Text(
+          subtitle,
+          style: const TextStyle(color: SeeraColors.greyMauve, fontSize: 12),
+        ),
       ],
     );
   }

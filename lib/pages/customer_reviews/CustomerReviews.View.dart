@@ -38,68 +38,91 @@ class _CustomerReviewsViewState extends State<CustomerReviewsView> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: SeeraColors.pinkMist,
-    appBar: AppBar(
-      backgroundColor: SeeraColors.pinkSoft,
-      foregroundColor: SeeraColors.pinkDeep,
-      title: const Text(
-        'Ulasan Pelanggan',
-        style: TextStyle(fontWeight: FontWeight.w800),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: 'Nunito'),
       ),
-    ),
-    body: OnReactive(() {
-      final error = customerReviewsError.state;
-      final reviews = customerReviews.state;
-      return RefreshIndicator(
-        onRefresh: CustomerReviewsCtrl().loadReviews,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-          children: [
-            const Text(
-              'Cerita dari pelanggan Seera',
-              style: TextStyle(
-                color: SeeraColors.ink,
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Lihat pengalaman mereka dan bagikan ceritamu juga.',
-              style: TextStyle(color: SeeraColors.greyMauve),
-            ),
-            const SizedBox(height: 20),
-            if (isCustomerReviewsLoading.state && reviews.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(36),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (error != null)
-              _ReviewsError(
-                message: error,
-                onRetry: CustomerReviewsCtrl().loadReviews,
-              )
-            else if (reviews.isEmpty)
-              const _ReviewsEmpty()
-            else
-              for (final review in reviews) ...[
-                _ReviewCard(review: review),
-                const SizedBox(height: 12),
-              ],
-          ],
+      child: Scaffold(
+        backgroundColor: SeeraColors.pinkMist,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: SeeraColors.pinkDeep,
+          title: const Text(
+            'Ulasan Pelanggan',
+            style: TextStyle(fontFamily: 'Baloo2', fontWeight: FontWeight.w800),
+          ),
         ),
-      );
-    }),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: _openReviewForm,
-      backgroundColor: SeeraColors.pinkPop,
-      foregroundColor: Colors.white,
-      icon: const Icon(Icons.rate_review_outlined),
-      label: const Text('Tulis Ulasan'),
-    ),
-  );
+        body: OnReactive(() {
+          final error = customerReviewsError.state;
+          final reviews = customerReviews.state;
+          return RefreshIndicator(
+            onRefresh: CustomerReviewsCtrl().loadReviews,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 960),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Cerita dari pelanggan Seera',
+                          style: TextStyle(
+                            color: SeeraColors.ink,
+                            fontFamily: 'Baloo2',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Lihat pengalaman mereka dan bagikan ceritamu juga.',
+                          style: TextStyle(color: SeeraColors.greyMauve),
+                        ),
+                        const SizedBox(height: 20),
+                        if (isCustomerReviewsLoading.state && reviews.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(36),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: SeeraColors.pinkPop,
+                              ),
+                            ),
+                          )
+                        else if (error != null)
+                          _ReviewsError(
+                            message: error,
+                            onRetry: CustomerReviewsCtrl().loadReviews,
+                          )
+                        else if (reviews.isEmpty)
+                          const _ReviewsEmpty()
+                        else
+                          for (final review in reviews) ...[
+                            _ReviewCard(review: review),
+                            const SizedBox(height: 12),
+                          ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _openReviewForm,
+          backgroundColor: SeeraColors.pinkPop,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.rate_review_outlined),
+          label: const Text('Tulis Ulasan'),
+        ),
+      ),
+    );
+  }
 }
 
 class _ReviewCard extends StatelessWidget {
@@ -111,46 +134,61 @@ class _ReviewCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     color: Colors.white,
     margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: SeeraColors.pinkSoft,
-                child: Text(
-                  review.customerName.isEmpty
-                      ? 'S'
-                      : review.customerName.substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: SeeraColors.pinkDeep,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  review.customerName.isEmpty
-                      ? 'Pelanggan Seera'
-                      : review.customerName,
-                  style: const TextStyle(
-                    color: SeeraColors.ink,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              _RatingStars(rating: review.rating),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            review.comment,
-            style: const TextStyle(color: SeeraColors.ink, height: 1.45),
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+    child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: SeeraColors.pinkShadow,
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: SeeraColors.pinkSoft,
+                  child: Text(
+                    review.customerName.isEmpty
+                        ? 'S'
+                        : review.customerName.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      color: SeeraColors.pinkDeep,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    review.customerName.isEmpty
+                        ? 'Pelanggan Seera'
+                        : review.customerName,
+                    style: const TextStyle(
+                      color: SeeraColors.ink,
+                      fontFamily: 'Baloo2',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                _RatingStars(rating: review.rating),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              review.comment,
+              style: const TextStyle(color: SeeraColors.ink, height: 1.45),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -171,7 +209,7 @@ class _RatingStars extends StatelessWidget {
           Icon(
             star <= rating ? Icons.star_rounded : Icons.star_outline_rounded,
             size: 18,
-            color: star <= rating ? SeeraColors.pinkPop : SeeraColors.pinkSoft,
+            color: star <= rating ? SeeraColors.yellow : SeeraColors.pinkSoft,
           ),
       ],
     ),
@@ -342,7 +380,7 @@ class _WriteReviewSheetState extends State<_WriteReviewSheet> {
                             ? Icons.star_rounded
                             : Icons.star_outline_rounded,
                         color: star <= _rating
-                            ? SeeraColors.pinkPop
+                            ? SeeraColors.yellow
                             : SeeraColors.pinkSoft,
                         size: 32,
                       ),
