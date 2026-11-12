@@ -40,6 +40,13 @@ class OrderTrackView extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
+          actions: [
+            IconButton(
+              tooltip: 'Ke beranda',
+              onPressed: () => nav.to('/home'),
+              icon: const Icon(Icons.home_outlined),
+            ),
+          ],
         ),
         body: Center(
           child: SizedBox(

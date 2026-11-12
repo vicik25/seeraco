@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
@@ -25,6 +27,8 @@ class AdminView extends StatefulWidget {
 class _AdminViewState extends State<AdminView> {
   var _selectedSection = 0;
   var _hasLoadedAdminData = false;
+  var _isRefreshingAdminData = false;
+  Timer? _adminRefreshTimer;
 
   void _loadAdminData() {
     if (_hasLoadedAdminData) return;
@@ -32,9 +36,28 @@ class _AdminViewState extends State<AdminView> {
     AdminCtrl().refreshProducts();
     AdminCtrl().refreshOrders();
     loadStoreData(refresh: true);
+    _adminRefreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => unawaited(_refreshAdminData()),
+    );
+  }
+
+  Future<void> _refreshAdminData() async {
+    if (_isRefreshingAdminData || loggedInAdmin.state == null) return;
+    _isRefreshingAdminData = true;
+    try {
+      await Future.wait([
+        AdminCtrl().refreshProducts(),
+        AdminCtrl().refreshOrders(),
+      ]);
+    } finally {
+      _isRefreshingAdminData = false;
+    }
   }
 
   void _signOut() {
+    _adminRefreshTimer?.cancel();
+    _adminRefreshTimer = null;
     loggedInAdmin.state = null;
     _hasLoadedAdminData = false;
     _selectedSection = 0;
@@ -57,6 +80,12 @@ class _AdminViewState extends State<AdminView> {
       default:
         return const _DashboardSummary();
     }
+  }
+
+  @override
+  void dispose() {
+    _adminRefreshTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -235,6 +264,7 @@ class _AdminViewState extends State<AdminView> {
                 selectedIndex: _selectedSection,
                 onDestinationSelected: (index) {
                   setState(() => _selectedSection = index);
+                  if (index == 0) unawaited(_refreshAdminData());
                 },
                 destinations: const [
                   NavigationDestination(

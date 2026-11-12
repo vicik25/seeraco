@@ -42,6 +42,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 final _supabaseRequests = <http.Request>[];
 var _returnCustomerReviews = false;
 var _returnAdminDashboardData = false;
+var _returnExtraPendingOrder = false;
+var _returnReducedStock = false;
 var _returnBuyerStories = false;
 
 void main() {
@@ -49,6 +51,8 @@ void main() {
     _supabaseRequests.clear();
     _returnCustomerReviews = false;
     _returnAdminDashboardData = false;
+    _returnExtraPendingOrder = false;
+    _returnReducedStock = false;
     _returnBuyerStories = false;
     loggedInAdmin.state = null;
     SeeraSupabase.setClientForTesting(
@@ -67,7 +71,9 @@ void main() {
           }
           if (path.endsWith('/Produk')) {
             return http.Response(
-              _returnAdminDashboardData
+              _returnAdminDashboardData && _returnReducedStock
+                  ? '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"stok":2,"status_tampil":true},{"kode_produk":"daisy-bracelet","nama_produk":"Pastel Daisy Bracelet","harga_jual":30000,"kategori":"Gelang","deskripsi":"Gelang pastel","hpp_satuan":12000,"stok":13,"status_tampil":true}]'
+                  : _returnAdminDashboardData
                   ? '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"stok":3,"status_tampil":true},{"kode_produk":"daisy-bracelet","nama_produk":"Pastel Daisy Bracelet","harga_jual":30000,"kategori":"Gelang","deskripsi":"Gelang pastel","hpp_satuan":12000,"stok":14,"status_tampil":true}]'
                   : '[{"kode_produk":"butterfly-watch","nama_produk":"Butterfly Beads Watch","harga_jual":45000,"kategori":"Jam Beads","deskripsi":"Jam tangan manik warna-warni","hpp_satuan":20000,"status_tampil":true}]',
               200,
@@ -117,11 +123,70 @@ void main() {
           if (path.endsWith('/Penjualan') &&
               request.method == 'GET' &&
               _returnAdminDashboardData) {
-            return http.Response(
-              '[{"id_transaksi":42,"nama_customer":"Rani","whatsapp":"6281234567890","email":"rani@example.com","alamat":"Jalan Melati 10, Bandung","catatan":"Tolong kirim setelah jam 5","tanggal_transaksi":"2026-11-04T10:00:00Z","ongkir":4000,"kode_unik":0,"total_bayar":94000,"status":"Proses","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":2,"harga_saat_ini":45000}]},{"id_transaksi":43,"nama_customer":"Dina","whatsapp":"628111111111","email":"dina@example.com","alamat":"Jalan Mawar 5, Jakarta","catatan":"","tanggal_transaksi":"2026-11-03T10:00:00Z","ongkir":4000,"kode_unik":0,"total_bayar":49000,"status":"Menunggu Pembayaran","Detail_Penjualan":[{"kode_produk":"butterfly-watch","jumlah":1,"harga_saat_ini":45000}]}]',
-              200,
-              request: request,
-            );
+            final orders = <Map<String, dynamic>>[
+              {
+                'id_transaksi': 42,
+                'nama_customer': 'Rani',
+                'whatsapp': '6281234567890',
+                'email': 'rani@example.com',
+                'alamat': 'Jalan Melati 10, Bandung',
+                'catatan': 'Tolong kirim setelah jam 5',
+                'tanggal_transaksi': '2026-11-04T10:00:00Z',
+                'ongkir': 4000,
+                'kode_unik': 0,
+                'total_bayar': 94000,
+                'status': 'Proses',
+                'Detail_Penjualan': [
+                  {
+                    'kode_produk': 'butterfly-watch',
+                    'jumlah': 2,
+                    'harga_saat_ini': 45000,
+                  },
+                ],
+              },
+              {
+                'id_transaksi': 43,
+                'nama_customer': 'Dina',
+                'whatsapp': '628111111111',
+                'email': 'dina@example.com',
+                'alamat': 'Jalan Mawar 5, Jakarta',
+                'catatan': '',
+                'tanggal_transaksi': '2026-11-03T10:00:00Z',
+                'ongkir': 4000,
+                'kode_unik': 0,
+                'total_bayar': 49000,
+                'status': 'Menunggu Pembayaran',
+                'Detail_Penjualan': [
+                  {
+                    'kode_produk': 'butterfly-watch',
+                    'jumlah': 1,
+                    'harga_saat_ini': 45000,
+                  },
+                ],
+              },
+              if (_returnExtraPendingOrder)
+                {
+                  'id_transaksi': 44,
+                  'nama_customer': 'Sari',
+                  'whatsapp': '628222222222',
+                  'email': 'sari@example.com',
+                  'alamat': 'Jalan Kenanga 3, Bandung',
+                  'catatan': '',
+                  'tanggal_transaksi': '2026-11-05T10:00:00Z',
+                  'ongkir': 4000,
+                  'kode_unik': 0,
+                  'total_bayar': 49000,
+                  'status': 'Menunggu Pembayaran',
+                  'Detail_Penjualan': [
+                    {
+                      'kode_produk': 'butterfly-watch',
+                      'jumlah': 1,
+                      'harga_saat_ini': 45000,
+                    },
+                  ],
+                },
+            ];
+            return http.Response(jsonEncode(orders), 200, request: request);
           }
           if (path.endsWith('/Penjualan') &&
               request.method == 'POST' &&
@@ -404,6 +469,24 @@ void main() {
       dashboardOrdersRequest.url.queryParameters['select'],
       contains('catatan'),
     );
+    _returnExtraPendingOrder = true;
+    _returnReducedStock = true;
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-new-orders')),
+        matching: find.text('2'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('admin-metric-total-stock')),
+        matching: find.text('15'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(const ValueKey('admin-order-details-button')));
@@ -418,7 +501,7 @@ void main() {
     await tester.tap(find.text('Produk'));
     await tester.pumpAndSettle();
     expect(find.text('Butterfly Beads Watch'), findsOneWidget);
-    expect(find.textContaining('Stok: 3 unit'), findsOneWidget);
+    expect(find.textContaining('Stok: 2 unit'), findsOneWidget);
     await tester.tap(find.text('Tambah'));
     await tester.pumpAndSettle();
     expect(find.text('Jumlah stok (unit)'), findsOneWidget);
@@ -635,6 +718,11 @@ void main() {
       product.price * 2 + checkoutShipping + checkoutUniqueCode,
     );
     expect(orderTrackAddress.state, 'Jalan Melati 10, Bandung');
+    await tester.tap(find.byTooltip('Ke beranda'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeView), findsOneWidget);
+    nav.to('/order-track');
+    await tester.pumpAndSettle();
     final paymentUpdate = _supabaseRequests.singleWhere(
       (request) =>
           request.url.path.endsWith('/Penjualan') && request.method == 'PATCH',
@@ -658,9 +746,7 @@ void main() {
     nav.to('/cart');
     await tester.pumpAndSettle();
     expect(cartItems.state, isEmpty);
-    cartItems.state = [
-      CartItem(product: product, variant: '', quantity: 2),
-    ];
+    cartItems.state = [CartItem(product: product, variant: '', quantity: 2)];
     await tester.pumpAndSettle();
     const CartCtrl().changeQuantity(cartItems.state.single, 1);
     await tester.pumpAndSettle();
@@ -733,6 +819,9 @@ void main() {
         await tester.pumpWidget(MaterialApp(home: page));
         await tester.pump(const Duration(milliseconds: 500));
         await tester.pumpAndSettle();
+        if (page is OrderTrackView) {
+          expect(find.byTooltip('Ke beranda'), findsOneWidget);
+        }
         expect(tester.takeException(), isNull, reason: '$page at $width px');
       }
 

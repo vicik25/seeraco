@@ -119,16 +119,14 @@ class CheckoutCtrl {
         paymentProofSelected.state = false;
         _resetCheckoutDraft();
         nav.to('/payment');
-      } catch (_) {
+      } catch (error) {
         if (!context.mounted) return;
         RM.scaffold.context = context;
+        final message = error.toString().toLowerCase().contains('stok produk')
+            ? 'Stok produk tidak cukup untuk jumlah yang dipilih.'
+            : 'Pesanan gagal disimpan. Periksa koneksi lalu coba lagi.';
         RM.scaffold.showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Pesanan gagal disimpan. Periksa koneksi lalu coba lagi.',
-            ),
-            behavior: SnackBarBehavior.fixed,
-          ),
+          SnackBar(content: Text(message), behavior: SnackBarBehavior.fixed),
         );
       }
     });
