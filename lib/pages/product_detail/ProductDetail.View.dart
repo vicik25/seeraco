@@ -76,7 +76,7 @@ class ProductDetailView extends StatelessWidget {
           final product = selectedProduct.state;
           if (product == null) return const SizedBox.shrink();
           return _DetailActions(
-            product: product,
+            canOrder: _controller.availableQuantity > 0,
             onAdd: () => _controller.addToCart(context),
             onBuy: () => _controller.buyNow(context),
           );
@@ -325,6 +325,18 @@ class _ProductInformation extends StatelessWidget {
         const SizedBox(height: 12),
         Text(product.description, style: const TextStyle(height: 1.5)),
         const SizedBox(height: 24),
+        if (product.stock != null) ...[
+          Text(
+            'Stok tersedia: ${product.stock} unit',
+            style: TextStyle(
+              color: product.stock! > 0
+                  ? SeeraColors.greyMauve
+                  : SeeraColors.pinkDeep,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
         const Text(
           'PILIH WARNA',
           style: TextStyle(
@@ -437,7 +449,10 @@ class _QuantitySelector extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'Tambah jumlah',
-              onPressed: selectedProductQuantity.state < 99
+              onPressed:
+                  selectedProductQuantity.state < 99 &&
+                      selectedProductQuantity.state <
+                          controller.availableQuantity
                   ? controller.increaseQuantity
                   : null,
               icon: const Icon(Icons.add),
@@ -481,12 +496,12 @@ class _PreOrderNote extends StatelessWidget {
 
 class _DetailActions extends StatelessWidget {
   const _DetailActions({
-    required this.product,
+    required this.canOrder,
     required this.onAdd,
     required this.onBuy,
   });
 
-  final Product product;
+  final bool canOrder;
   final VoidCallback onAdd;
   final VoidCallback onBuy;
 
@@ -511,12 +526,12 @@ class _DetailActions extends StatelessWidget {
                     label: 'Tambah ke Keranjang',
                     icon: Icons.shopping_bag_outlined,
                     outlined: true,
-                    onPressed: onAdd,
+                    onPressed: canOrder ? onAdd : null,
                   );
                   final buyButton = SeeraPillButton(
                     label: 'Beli Sekarang',
                     icon: Icons.favorite_border_rounded,
-                    onPressed: onBuy,
+                    onPressed: canOrder ? onBuy : null,
                   );
                   if (compact) {
                     return Column(

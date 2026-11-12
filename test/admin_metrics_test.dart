@@ -28,6 +28,7 @@ void main() {
       ],
     );
 
+    expect(metrics.totalOrders, 3);
     expect(metrics.newOrders, 2);
   });
 }

@@ -847,12 +847,14 @@ class _DashboardSummary extends StatelessWidget {
                         : 'Dihitung dari HPP produk',
                   ),
                   _MetricCard(
-                    key: const ValueKey('admin-metric-new-orders'),
+                    key: const ValueKey('admin-metric-total-orders'),
                     width: width,
-                    label: 'Pesanan baru',
+                    label: 'Total pesanan',
                     icon: Icons.shopping_bag_outlined,
-                    value: isLoading ? '—' : '${metrics.newOrders}',
-                    hint: isLoading ? 'Memuat data...' : 'Menunggu pembayaran',
+                    value: isLoading ? '—' : '${metrics.totalOrders}',
+                    hint: isLoading
+                        ? 'Memuat data...'
+                        : '${metrics.newOrders} menunggu pembayaran',
                   ),
                   _MetricCard(
                     key: const ValueKey('admin-metric-low-stock'),

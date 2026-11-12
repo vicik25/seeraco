@@ -428,8 +428,8 @@ void main() {
     );
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey('admin-metric-new-orders')),
-        matching: find.text('1'),
+        of: find.byKey(const ValueKey('admin-metric-total-orders')),
+        matching: find.text('2'),
       ),
       findsOneWidget,
     );
@@ -475,8 +475,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey('admin-metric-new-orders')),
-        matching: find.text('2'),
+        of: find.byKey(const ValueKey('admin-metric-total-orders')),
+        matching: find.text('3'),
       ),
       findsOneWidget,
     );
@@ -778,6 +778,49 @@ void main() {
     expect(find.text('JUMLAH'), findsOneWidget);
     expect(tester.getSize(find.byType(ListView).first).height, greaterThan(0));
     expect(tester.getSize(find.byType(ListView).first).width, greaterThan(760));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('product detail limits order quantity to remaining stock', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final product = Product(
+      id: 'limited-watch',
+      name: 'Jam Stok Terbatas',
+      price: 25000,
+      description: 'Jam uji dengan stok terbatas.',
+      stock: 2,
+    );
+    selectedProduct.state = product;
+    selectedProductQuantity.state = 1;
+    cartItems.state = const [];
+
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailView()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Stok tersedia: 2 unit'), findsOneWidget);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Tambah jumlah'));
+    await tester.pumpAndSettle();
+    expect(find.text('2'), findsOneWidget);
+
+    await tester.tap(find.text('Tambah ke Keranjang'));
+    await tester.pumpAndSettle();
+    expect(cartItems.state.single.quantity, 2);
+    expect(
+      find.text('Jam Stok Terbatas ditambahkan ke keranjang.'),
+      findsOneWidget,
+    );
+    final addButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Tambah ke Keranjang'),
+    );
+    expect(addButton.onPressed, isNull);
     expect(tester.takeException(), isNull);
   });
 

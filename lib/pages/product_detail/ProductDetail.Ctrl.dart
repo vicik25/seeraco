@@ -24,9 +24,19 @@ class ProductDetailCtrl {
   }
 
   void increaseQuantity() {
-    if (selectedProductQuantity.state < 99) {
+    if (selectedProductQuantity.state < availableQuantity) {
       selectedProductQuantity.state++;
     }
+  }
+
+  int get availableQuantity {
+    final product = selectedProduct.state;
+    final stock = product?.stock;
+    if (product == null || stock == null) return 99;
+    final inCart = cartItems.state
+        .where((item) => item.product.id == product.id)
+        .fold<int>(0, (total, item) => total + item.quantity);
+    return (stock - inCart).clamp(0, 99).toInt();
   }
 
   void decreaseQuantity() {
@@ -35,10 +45,24 @@ class ProductDetailCtrl {
     }
   }
 
-  void addToCart(BuildContext context) {
+  bool addToCart(BuildContext context) {
     final product = selectedProduct.state;
     if (product == null) {
       throw StateError('Pilih produk sebelum menambahkannya ke keranjang.');
+    }
+    if (selectedProductQuantity.state > availableQuantity) {
+      RM.scaffold.context = context;
+      RM.scaffold.showSnackBar(
+        SnackBar(
+          content: Text(
+            availableQuantity == 0
+                ? 'Stok ${product.name} sedang habis.'
+                : 'Stok ${product.name} tersisa $availableQuantity unit.',
+          ),
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return false;
     }
 
     final item = CartItem(
@@ -48,7 +72,9 @@ class ProductDetailCtrl {
     );
     final items = [...cartItems.state];
     final existingIndex = items.indexWhere(
-      (current) => current.product.id == item.product.id && current.variant == item.variant,
+      (current) =>
+          current.product.id == item.product.id &&
+          current.variant == item.variant,
     );
     if (existingIndex == -1) {
       items.add(item);
@@ -67,11 +93,11 @@ class ProductDetailCtrl {
         action: SnackBarAction(label: 'Lihat', onPressed: navToCart),
       ),
     );
+    return true;
   }
 
   void buyNow(BuildContext context) {
-    addToCart(context);
-    navToCart();
+    if (addToCart(context)) navToCart();
   }
 
   void navToCart() {

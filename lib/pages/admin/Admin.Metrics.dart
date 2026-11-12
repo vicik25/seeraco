@@ -2,6 +2,7 @@ class AdminDashboardMetrics {
   const AdminDashboardMetrics({
     required this.revenue,
     required this.estimatedProfit,
+    required this.totalOrders,
     required this.newOrders,
     required this.lowStockProducts,
     required this.totalStock,
@@ -13,6 +14,7 @@ class AdminDashboardMetrics {
 
   final int revenue;
   final int estimatedProfit;
+  final int totalOrders;
   final int newOrders;
   final int lowStockProducts;
   final int totalStock;
@@ -68,6 +70,7 @@ class AdminDashboardMetrics {
     return AdminDashboardMetrics(
       revenue: revenue,
       estimatedProfit: estimatedProfit,
+      totalOrders: orders.length,
       newOrders: newOrders,
       lowStockProducts: lowStockProducts,
       totalStock: totalStock,
