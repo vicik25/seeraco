@@ -17,4 +17,17 @@ void main() {
     expect(metrics.productsWithoutStock, 1);
     expect(metrics.lowStockProducts, 2);
   });
+
+  test('counts new orders regardless of status casing or whitespace', () {
+    final metrics = AdminDashboardMetrics.fromData(
+      products: const [],
+      orders: [
+        {'status': 'Menunggu Pembayaran'},
+        {'status': ' menunggu pembayaran '},
+        {'status': 'Proses'},
+      ],
+    );
+
+    expect(metrics.newOrders, 2);
+  });
 }
